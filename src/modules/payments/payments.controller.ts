@@ -8,11 +8,11 @@ import {
   Put,
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
-import {
+import type {
   CreateDepositDto,
+  PaymentsListResponseDto,
   PaymentMutationResponseDto,
   PaymentResponseDto,
-  PaymentsListResponseDto,
 } from './dto';
 
 @Controller()

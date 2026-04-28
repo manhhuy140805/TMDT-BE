@@ -10,6 +10,13 @@ import { ProposalsModule } from './modules/proposals/proposals.module';
 import { SupervisorsModule } from './modules/supervisors/supervisors.module';
 import { UsersModule } from './modules/users/users.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { DisputesModule } from './modules/disputes/disputes.module';
+import { EvidencesModule } from './modules/evidences/evidences.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
+import { ChatModule } from './modules/chat/chat.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ReportsModule } from './modules/reports/reports.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -24,6 +31,13 @@ import { PaymentsModule } from './modules/payments/payments.module';
     SupervisorsModule,
     ProgressModule,
     PaymentsModule,
+    DisputesModule,
+    EvidencesModule,
+    ReviewsModule,
+    ChatModule,
+    NotificationsModule,
+    ReportsModule,
+    AdminModule,
   ],
 })
 export class AppModule {}
