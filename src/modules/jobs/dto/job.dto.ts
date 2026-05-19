@@ -1,5 +1,10 @@
 import type { TrangThaiYeuCau } from '@prisma/client';
 
+export type SkillSummaryDto = {
+  kyNangId: number;
+  tenKyNang: string;
+};
+
 export type JobDto = {
   yeuCauId: number;
   nguoiThueId: number;
@@ -26,6 +31,7 @@ export type JobWithDetailsDto = JobDto & {
     loaiDichVuId: number;
     tenLoai: string;
   };
+  kyNangs: SkillSummaryDto[];
 };
 
 export type JobsListResponseDto = {
@@ -46,6 +52,8 @@ export type CreateJobDto = {
   nganSachMax: number;
   thoiHan: string;
   yeuCauGiamSat?: boolean;
+  /** Danh sách KyNangID yêu cầu (optional) */
+  kyNangIds?: number[];
 };
 
 export type UpdateJobDto = {
@@ -73,4 +81,15 @@ export type SearchJobsQueryDto = {
   keyword?: string;
   category?: string;
   budget?: string;
+  /** Lọc theo KyNangID (comma-separated, e.g. "1,2,3") */
+  skills?: string;
+};
+
+export type SetJobSkillsDto = {
+  kyNangIds: number[];
+};
+
+export type JobSkillsMutationResponseDto = {
+  message: string;
+  kyNangs: SkillSummaryDto[];
 };

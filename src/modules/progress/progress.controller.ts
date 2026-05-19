@@ -22,9 +22,7 @@ export class ProgressController {
   constructor(private readonly progressService: ProgressService) {}
 
   @Get(':id')
-  findOne(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<ProgressResponseDto> {
+  findOne(@Param('id', ParseIntPipe) id: number): Promise<ProgressResponseDto> {
     return this.progressService.findOne(id);
   }
 

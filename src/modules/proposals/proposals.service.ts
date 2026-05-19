@@ -38,6 +38,16 @@ const PROPOSAL_SELECT = {
           Email: true,
         },
       },
+      FreelancerKyNangs: {
+        select: {
+          KyNang: {
+            select: {
+              KyNangID: true,
+              TenKyNang: true,
+            },
+          },
+        },
+      },
     },
   },
   YeuCau: {
@@ -292,6 +302,10 @@ export class ProposalsService {
         email: proposal.Freelancer.TaiKhoan.Email,
         kinhNghiem: proposal.Freelancer.KinhNghiem,
         kyNang: proposal.Freelancer.KyNang,
+        kyNangs: proposal.Freelancer.FreelancerKyNangs.map((r) => ({
+          kyNangId: r.KyNang.KyNangID,
+          tenKyNang: r.KyNang.TenKyNang,
+        })),
         xepHang: proposal.Freelancer.XepHang.toString(),
       },
       yeuCau: {

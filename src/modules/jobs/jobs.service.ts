@@ -10,9 +10,12 @@ import type {
   JobDeleteResponseDto,
   JobMutationResponseDto,
   JobResponseDto,
+  JobSkillsMutationResponseDto,
   JobsListResponseDto,
   JobWithDetailsDto,
   SearchJobsQueryDto,
+  SetJobSkillsDto,
+  SkillSummaryDto,
   UpdateJobDto,
 } from './dto';
 
@@ -47,6 +50,16 @@ const JOB_SELECT = {
       TenLoai: true,
     },
   },
+  YeuCauKyNangs: {
+    select: {
+      KyNang: {
+        select: {
+          KyNangID: true,
+          TenKyNang: true,
+        },
+      },
+    },
+  },
 } as const;
 
 type JobEntity = Prisma.YeuCauGetPayload<{ select: typeof JOB_SELECT }>;
@@ -66,9 +79,7 @@ export class JobsService {
   async findAll(): Promise<JobsListResponseDto> {
     const jobs = await this.prisma.yeuCau.findMany({
       select: JOB_SELECT,
-      orderBy: {
-        NgayTao: 'desc',
-      },
+      orderBy: { NgayTao: 'desc' },
     });
 
     return {
@@ -104,12 +115,24 @@ export class JobsService {
       }
     }
 
+    // Filter by skills: ?skills=1,2,3 → job must have ALL listed skills
+    if (query.skills?.trim()) {
+      const skillIds = query.skills
+        .split(',')
+        .map((s) => parseInt(s.trim(), 10))
+        .filter((n) => !isNaN(n));
+
+      if (skillIds.length > 0) {
+        where.YeuCauKyNangs = {
+          some: { KyNangID: { in: skillIds } },
+        };
+      }
+    }
+
     const jobs = await this.prisma.yeuCau.findMany({
       where,
       select: JOB_SELECT,
-      orderBy: {
-        NgayTao: 'desc',
-      },
+      orderBy: { NgayTao: 'desc' },
     });
 
     return {
@@ -120,7 +143,6 @@ export class JobsService {
 
   async findOne(id: number): Promise<JobResponseDto> {
     const job = await this.findJobOrThrow(id);
-
     return { job: this.toJobWithDetailsDto(job) };
   }
 
@@ -137,9 +159,7 @@ export class JobsService {
     const jobs = await this.prisma.yeuCau.findMany({
       where: { NguoiThueID: nguoiThue.NguoiThueID },
       select: JOB_SELECT,
-      orderBy: {
-        NgayTao: 'desc',
-      },
+      orderBy: { NgayTao: 'desc' },
     });
 
     return {
@@ -170,6 +190,12 @@ export class JobsService {
       throw new BadRequestException('Thoi han khong hop le');
     }
 
+    // Validate skill IDs if provided
+    const kyNangIds = payload.kyNangIds ?? [];
+    if (kyNangIds.length > 0) {
+      await this.validateKyNangIds(kyNangIds);
+    }
+
     const job = await this.prisma.yeuCau.create({
       data: {
         NguoiThueID: payload.nguoiThueId,
@@ -181,6 +207,11 @@ export class JobsService {
         ThoiHan: thoiHan,
         YeuCauGiamSat: payload.yeuCauGiamSat ?? false,
         TrangThai: 'DangMo',
+        YeuCauKyNangs: kyNangIds.length > 0
+          ? {
+              create: kyNangIds.map((id) => ({ KyNangID: id })),
+            }
+          : undefined,
       },
       select: JOB_SELECT,
     });
@@ -219,11 +250,102 @@ export class JobsService {
       data: { TrangThai: 'DaHuy' },
     });
 
+    return { message: 'Xoa yeu cau thanh cong', jobId: id };
+  }
+
+  // ── Skills management ──────────────────────────────────────────────────────
+
+  async getJobSkills(id: number): Promise<JobSkillsMutationResponseDto> {
+    await this.findJobOrThrow(id);
+
+    const rows = await this.prisma.yeuCauKyNang.findMany({
+      where: { YeuCauID: id },
+      select: {
+        KyNang: { select: { KyNangID: true, TenKyNang: true } },
+      },
+    });
+
     return {
-      message: 'Xoa yeu cau thanh cong',
-      jobId: id,
+      message: 'Lay danh sach ky nang thanh cong',
+      kyNangs: rows.map((r) => ({
+        kyNangId: r.KyNang.KyNangID,
+        tenKyNang: r.KyNang.TenKyNang,
+      })),
     };
   }
+
+  async setJobSkills(
+    id: number,
+    payload: SetJobSkillsDto,
+  ): Promise<JobSkillsMutationResponseDto> {
+    await this.findJobOrThrow(id);
+
+    if (payload.kyNangIds.length > 0) {
+      await this.validateKyNangIds(payload.kyNangIds);
+    }
+
+    // Replace all skills atomically
+    await this.prisma.$transaction([
+      this.prisma.yeuCauKyNang.deleteMany({ where: { YeuCauID: id } }),
+      ...(payload.kyNangIds.length > 0
+        ? [
+            this.prisma.yeuCauKyNang.createMany({
+              data: payload.kyNangIds.map((kyNangId) => ({
+                YeuCauID: id,
+                KyNangID: kyNangId,
+              })),
+            }),
+          ]
+        : []),
+    ]);
+
+    const rows = await this.prisma.yeuCauKyNang.findMany({
+      where: { YeuCauID: id },
+      select: {
+        KyNang: { select: { KyNangID: true, TenKyNang: true } },
+      },
+    });
+
+    return {
+      message: 'Cap nhat ky nang yeu cau thanh cong',
+      kyNangs: rows.map((r) => ({
+        kyNangId: r.KyNang.KyNangID,
+        tenKyNang: r.KyNang.TenKyNang,
+      })),
+    };
+  }
+
+  async addJobSkill(
+    id: number,
+    kyNangId: number,
+  ): Promise<JobSkillsMutationResponseDto> {
+    await this.findJobOrThrow(id);
+    await this.validateKyNangIds([kyNangId]);
+
+    // Upsert — ignore if already exists
+    await this.prisma.yeuCauKyNang.upsert({
+      where: { YeuCauID_KyNangID: { YeuCauID: id, KyNangID: kyNangId } },
+      create: { YeuCauID: id, KyNangID: kyNangId },
+      update: {},
+    });
+
+    return this.getJobSkills(id);
+  }
+
+  async removeJobSkill(
+    id: number,
+    kyNangId: number,
+  ): Promise<JobSkillsMutationResponseDto> {
+    await this.findJobOrThrow(id);
+
+    await this.prisma.yeuCauKyNang.deleteMany({
+      where: { YeuCauID: id, KyNangID: kyNangId },
+    });
+
+    return this.getJobSkills(id);
+  }
+
+  // ── Private helpers ────────────────────────────────────────────────────────
 
   private async findJobOrThrow(id: number): Promise<JobEntity> {
     const job = await this.prisma.yeuCau.findUnique({
@@ -260,6 +382,21 @@ export class JobsService {
     }
   }
 
+  private async validateKyNangIds(ids: number[]): Promise<void> {
+    const found = await this.prisma.kyNang.findMany({
+      where: { KyNangID: { in: ids } },
+      select: { KyNangID: true },
+    });
+
+    if (found.length !== ids.length) {
+      const foundIds = new Set(found.map((k) => k.KyNangID));
+      const missing = ids.filter((id) => !foundIds.has(id));
+      throw new BadRequestException(
+        `Ky nang khong ton tai: ${missing.join(', ')}`,
+      );
+    }
+  }
+
   private async buildUpdateData(
     payload: UpdateJobDto,
   ): Promise<Prisma.YeuCauUpdateInput> {
@@ -267,9 +404,7 @@ export class JobsService {
 
     if (payload.loaiDichVuId !== undefined) {
       await this.validateLoaiDichVu(payload.loaiDichVuId);
-      data.LoaiDichVu = {
-        connect: { LoaiDichVuID: payload.loaiDichVuId },
-      };
+      data.LoaiDichVu = { connect: { LoaiDichVuID: payload.loaiDichVuId } };
     }
 
     if (payload.tieuDe !== undefined) {
@@ -319,6 +454,11 @@ export class JobsService {
   }
 
   private toJobWithDetailsDto(job: JobEntity): JobWithDetailsDto {
+    const kyNangs: SkillSummaryDto[] = job.YeuCauKyNangs.map((r) => ({
+      kyNangId: r.KyNang.KyNangID,
+      tenKyNang: r.KyNang.TenKyNang,
+    }));
+
     return {
       yeuCauId: job.YeuCauID,
       nguoiThueId: job.NguoiThueID,
@@ -342,16 +482,15 @@ export class JobsService {
         loaiDichVuId: job.LoaiDichVu.LoaiDichVuID,
         tenLoai: job.LoaiDichVu.TenLoai,
       },
+      kyNangs,
     };
   }
 
   private requireText(value: string | undefined, fieldName: string): string {
     const trimmed = value?.trim();
-
     if (!trimmed) {
       throw new BadRequestException(`${fieldName} is required`);
     }
-
     return trimmed;
   }
 

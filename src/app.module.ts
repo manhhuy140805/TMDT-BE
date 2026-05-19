@@ -7,6 +7,7 @@ import { HealthModule } from './modules/health/health.module';
 import { JobsModule } from './modules/jobs/jobs.module';
 import { ProgressModule } from './modules/progress/progress.module';
 import { ProposalsModule } from './modules/proposals/proposals.module';
+import { SkillsModule } from './modules/skills/skills.module';
 import { SupervisorsModule } from './modules/supervisors/supervisors.module';
 import { UsersModule } from './modules/users/users.module';
 import { PaymentsModule } from './modules/payments/payments.module';
@@ -24,6 +25,7 @@ import { AdminModule } from './modules/admin/admin.module';
     AuthModule,
     UsersModule,
     CategoriesModule,
+    SkillsModule,
     JobsModule,
     ProposalsModule,
     FreelancersModule,

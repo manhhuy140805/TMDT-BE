@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ContractsService } from './contracts.service';
 import { ProgressService } from '../progress/progress.service';
+import { ChatService } from '../chat/chat.service';
 import type {
   ContractMutationResponseDto,
   ContractResponseDto,
@@ -19,12 +20,14 @@ import type {
   UpdateContractStatusDto,
 } from './dto/contract.dto';
 import type { ProgressListResponseDto } from '../progress/dto/progress.dto';
+import type { ConversationListResponseDto } from '../chat/dto';
 
 @Controller('contracts')
 export class ContractsController {
   constructor(
     private readonly contractsService: ContractsService,
     private readonly progressService: ProgressService,
+    private readonly chatService: ChatService,
   ) {}
 
   @Get()
@@ -51,6 +54,13 @@ export class ContractsController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<ProgressListResponseDto> {
     return this.progressService.findByContractId(id);
+  }
+
+  @Get(':id/conversations')
+  getConversations(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ConversationListResponseDto> {
+    return this.chatService.findConversationsByContractId(id);
   }
 
   @Post()

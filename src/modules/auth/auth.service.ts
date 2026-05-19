@@ -119,11 +119,11 @@ export class AuthService {
   }
 
   async login(payload: AuthLoginDto): Promise<AuthResponseDto> {
-    const tenDangNhap = this.requireText(payload.tenDangNhap, 'tenDangNhap');
+    const email = this.requireText(payload.email, 'email').toLowerCase();
     const matKhau = this.requireText(payload.matKhau, 'matKhau');
 
     const taiKhoan = await this.prisma.taiKhoan.findUnique({
-      where: { TenDangNhap: tenDangNhap },
+      where: { Email: email },
     });
 
     if (!taiKhoan || taiKhoan.MatKhau !== matKhau) {

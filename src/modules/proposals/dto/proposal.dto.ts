@@ -1,4 +1,5 @@
 import type { TrangThaiBaoGia } from '@prisma/client';
+import type { SkillSummaryDto } from '../../jobs/dto';
 
 export type ProposalDto = {
   baoGiaId: number;
@@ -20,6 +21,7 @@ export type ProposalWithDetailsDto = ProposalDto & {
     email: string;
     kinhNghiem: number;
     kyNang: string | null;
+    kyNangs: SkillSummaryDto[];
     xepHang: string;
   };
   yeuCau: {

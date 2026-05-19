@@ -1,10 +1,16 @@
 import type { LoaiTinNhan, TrangThaiCuocHoiThoai } from '@prisma/client';
 
+export type MemberSummaryDto = {
+  taiKhoanId: number;
+  hoTen: string;
+  email: string;
+};
+
 export type ConversationDto = {
   cuocHoiThoaiId: number;
   congViecId: number | null;
-  thanhVien1Id: number;
-  thanhVien2Id: number;
+  thanhVien1: MemberSummaryDto;
+  thanhVien2: MemberSummaryDto;
   giamSatId: number | null;
   tinNhanCuoi: string | null;
   trangThai: TrangThaiCuocHoiThoai;
@@ -35,7 +41,7 @@ export type ConversationMutationResponseDto = {
 export type MessageDto = {
   tinNhanId: number;
   cuocHoiThoaiId: number;
-  nguoiGuiId: number;
+  nguoiGui: MemberSummaryDto;
   noiDung: string;
   loaiTin: LoaiTinNhan;
   daDoc: boolean;
@@ -57,4 +63,14 @@ export type CreateMessageDto = {
 export type MessageMutationResponseDto = {
   message: string;
   data: MessageDto;
+};
+
+export type MarkReadResponseDto = {
+  message: string;
+  count: number;
+};
+
+export type CloseConversationResponseDto = {
+  message: string;
+  conversation: ConversationDto;
 };

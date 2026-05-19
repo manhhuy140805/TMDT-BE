@@ -5,54 +5,71 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import type {
-  ConversationListResponseDto,
+  CloseConversationResponseDto,
   ConversationMutationResponseDto,
   ConversationResponseDto,
   CreateConversationDto,
   CreateMessageDto,
+  MarkReadResponseDto,
   MessageListResponseDto,
   MessageMutationResponseDto,
 } from './dto';
 
-@Controller()
+@Controller('chat')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
-  @Post('conversations')
-  createConversation(
+  // POST /conversations
+  @Post()
+  create(
     @Body() payload: CreateConversationDto,
   ): Promise<ConversationMutationResponseDto> {
     return this.chatService.createConversation(payload);
   }
 
-  @Get('conversations/:id')
-  findConversation(
+  // GET /conversations/:id
+  @Get(':id')
+  findOne(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<ConversationResponseDto> {
     return this.chatService.findConversationById(id);
   }
 
-  @Get('contracts/:id/conversations')
-  findConversationsByContract(
-    @Param('id', ParseIntPipe) contractId: number,
-  ): Promise<ConversationListResponseDto> {
-    return this.chatService.findConversationsByContractId(contractId);
+  // PUT /conversations/:id/close
+  @Put(':id/close')
+  close(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<CloseConversationResponseDto> {
+    return this.chatService.closeConversation(id);
   }
 
-  @Post('messages')
-  createMessage(
+  // GET /conversations/:id/messages
+  @Get(':id/messages')
+  getMessages(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<MessageListResponseDto> {
+    return this.chatService.getMessages(id);
+  }
+
+  // POST /conversations/:id/messages
+  @Post(':id/messages')
+  sendMessage(
+    @Param('id', ParseIntPipe) id: number,
     @Body() payload: CreateMessageDto,
   ): Promise<MessageMutationResponseDto> {
-    return this.chatService.createMessage(payload);
+    return this.chatService.createMessage({ ...payload, cuocHoiThoaiId: id });
   }
 
-  @Get('conversations/:id/messages')
-  getMessages(
-    @Param('id', ParseIntPipe) conversationId: number,
-  ): Promise<MessageListResponseDto> {
-    return this.chatService.getMessages(conversationId);
+  // PUT /conversations/:id/read/:userId
+  @Put(':id/read/:userId')
+  markAsRead(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<MarkReadResponseDto> {
+    return this.chatService.markAsRead(id, userId);
   }
 }

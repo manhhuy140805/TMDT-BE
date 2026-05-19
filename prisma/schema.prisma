@@ -188,6 +188,39 @@ model LoaiDichVu {
   YeuCaus YeuCau[]
 }
 
+model KyNang {
+  KyNangID  Int    @id @default(autoincrement())
+  TenKyNang String @unique(map: "uq_tenky_nang") @db.VarChar(100)
+  MoTa      String? @db.VarChar(255)
+
+  YeuCauKyNangs     YeuCauKyNang[]
+  FreelancerKyNangs FreelancerKyNang[]
+}
+
+model YeuCauKyNang {
+  YeuCauID Int
+  KyNangID Int
+
+  YeuCau YeuCau @relation(fields: [YeuCauID], references: [YeuCauID], onDelete: Cascade)
+  KyNang KyNang @relation(fields: [KyNangID], references: [KyNangID], onDelete: Cascade)
+
+  @@id([YeuCauID, KyNangID])
+  @@index([YeuCauID])
+  @@index([KyNangID])
+}
+
+model FreelancerKyNang {
+  FreelancerID Int
+  KyNangID     Int
+
+  Freelancer Freelancer @relation(fields: [FreelancerID], references: [FreelancerID], onDelete: Cascade)
+  KyNang     KyNang     @relation(fields: [KyNangID], references: [KyNangID], onDelete: Cascade)
+
+  @@id([FreelancerID, KyNangID])
+  @@index([FreelancerID])
+  @@index([KyNangID])
+}
+
 model TaiKhoan {
   TaiKhoanID  Int               @id @default(autoincrement())
   TenDangNhap String            @unique(map: "uq_tendangnhap") @db.VarChar(50)
@@ -254,6 +287,7 @@ model Freelancer {
   CongViecs      CongViec[]
   YeuCauGiamSats YeuCauGiamSat[]
   TienDos        TienDo[]
+  FreelancerKyNangs FreelancerKyNang[]
 
   @@index([TaiKhoanID])
 }
@@ -301,10 +335,11 @@ model YeuCau {
   NgayTao       DateTime        @default(now()) @db.Timestamp(3)
   NgayCapNhat   DateTime        @updatedAt @db.Timestamp(3)
 
-  NguoiThue  NguoiThue  @relation(fields: [NguoiThueID], references: [NguoiThueID])
-  LoaiDichVu LoaiDichVu @relation(fields: [LoaiDichVuID], references: [LoaiDichVuID])
-  BaoGias    BaoGia[]
-  CongViecs  CongViec[]
+  NguoiThue    NguoiThue      @relation(fields: [NguoiThueID], references: [NguoiThueID])
+  LoaiDichVu   LoaiDichVu     @relation(fields: [LoaiDichVuID], references: [LoaiDichVuID])
+  BaoGias      BaoGia[]
+  CongViecs    CongViec[]
+  YeuCauKyNangs YeuCauKyNang[]
 
   @@index([NguoiThueID], map: "idx_yeucau_nguoithue")
   @@index([TrangThai], map: "idx_yeucau_trangthai")

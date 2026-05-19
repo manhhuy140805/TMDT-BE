@@ -10,8 +10,10 @@ import {
 } from '@nestjs/common';
 import { JobsService } from '../jobs/jobs.service';
 import { ContractsService } from '../contracts/contracts.service';
+import { ChatService } from '../chat/chat.service';
 import type { JobsListResponseDto } from '../jobs/dto';
 import type { ContractsListResponseDto } from '../contracts/dto';
+import type { ConversationListResponseDto } from '../chat/dto';
 import type {
   SearchUsersQueryDto,
   UpdateUserDto,
@@ -29,6 +31,7 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly jobsService: JobsService,
     private readonly contractsService: ContractsService,
+    private readonly chatService: ChatService,
   ) {}
 
   @Get()
@@ -60,6 +63,13 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<ContractsListResponseDto> {
     return this.contractsService.findByUserId(id);
+  }
+
+  @Get(':id/conversations')
+  getUserConversations(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ConversationListResponseDto> {
+    return this.chatService.findConversationsByUserId(id);
   }
 
   @Get(':id')

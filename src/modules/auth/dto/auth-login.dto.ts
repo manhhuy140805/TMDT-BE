@@ -1,4 +1,4 @@
 export type AuthLoginDto = {
-  tenDangNhap?: string;
+  email?: string;
   matKhau?: string;
 };
