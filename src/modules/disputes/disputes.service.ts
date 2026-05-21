@@ -129,9 +129,9 @@ export class DisputesService {
       throw new BadRequestException('Khong the xu ly tranh chap o trang thai hien tai');
     }
 
-    // Verify supervisor
-    const supervisor = await this.prisma.donViGiamSat.findUnique({
-      where: { GiamSatID: payload.giamSatId },
+    // Verify supervisor (giamSatId is now TaiKhoanID)
+    const supervisor = await this.prisma.donViGiamSat.findFirst({
+      where: { TaiKhoanID: payload.giamSatId },
     });
 
     if (!supervisor) {

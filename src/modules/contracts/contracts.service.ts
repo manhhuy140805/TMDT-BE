@@ -39,32 +39,29 @@ const CONTRACT_SELECT = {
   },
   Freelancer: {
     select: {
-      FreelancerID: true,
-      TaiKhoan: {
-        select: {
-          TaiKhoanID: true,
-          HoTen: true,
-          Email: true,
-        },
-      },
+      TaiKhoanID: true,
+      HoTen: true,
+      Email: true,
     },
   },
   NguoiThue: {
     select: {
-      NguoiThueID: true,
-      TaiKhoan: {
-        select: {
-          TaiKhoanID: true,
-          HoTen: true,
-          Email: true,
-        },
-      },
+      TaiKhoanID: true,
+      HoTen: true,
+      Email: true,
     },
   },
   GiamSat: {
     select: {
-      GiamSatID: true,
-      TenDonVi: true,
+      TaiKhoanID: true,
+      HoTen: true,
+      Email: true,
+      DonViGiamSat: {
+        select: {
+          GiamSatID: true,
+          TenDonVi: true,
+        },
+      },
     },
   },
 } as const;
@@ -106,49 +103,36 @@ export class ContractsService {
   }
 
   async findByUserId(userId: number): Promise<ContractsListResponseDto> {
-    // Check if user is NguoiThue
-    const nguoiThue = await this.prisma.nguoiThue.findFirst({
-      where: { TaiKhoanID: userId },
-      select: { NguoiThueID: true },
+    // Since FreelancerID and NguoiThueID now reference TaiKhoan directly
+    const contracts = await this.prisma.congViec.findMany({
+      where: {
+        OR: [
+          { NguoiThueID: userId },
+          { FreelancerID: userId },
+        ],
+      },
+      select: CONTRACT_SELECT,
+      orderBy: {
+        NgayTao: 'desc',
+      },
     });
 
-    if (nguoiThue) {
-      const contracts = await this.prisma.congViec.findMany({
-        where: { NguoiThueID: nguoiThue.NguoiThueID },
-        select: CONTRACT_SELECT,
-        orderBy: {
-          NgayTao: 'desc',
-        },
+    if (contracts.length === 0) {
+      // Verify user exists
+      const user = await this.prisma.taiKhoan.findUnique({
+        where: { TaiKhoanID: userId },
+        select: { TaiKhoanID: true },
       });
 
-      return {
-        total: contracts.length,
-        contracts: contracts.map((c) => this.toContractWithDetailsDto(c)),
-      };
+      if (!user) {
+        throw new NotFoundException('Nguoi dung khong ton tai');
+      }
     }
 
-    // Check if user is Freelancer
-    const freelancer = await this.prisma.freelancer.findFirst({
-      where: { TaiKhoanID: userId },
-      select: { FreelancerID: true },
-    });
-
-    if (freelancer) {
-      const contracts = await this.prisma.congViec.findMany({
-        where: { FreelancerID: freelancer.FreelancerID },
-        select: CONTRACT_SELECT,
-        orderBy: {
-          NgayTao: 'desc',
-        },
-      });
-
-      return {
-        total: contracts.length,
-        contracts: contracts.map((c) => this.toContractWithDetailsDto(c)),
-      };
-    }
-
-    throw new NotFoundException('Nguoi dung khong ton tai');
+    return {
+      total: contracts.length,
+      contracts: contracts.map((c) => this.toContractWithDetailsDto(c)),
+    };
   }
 
   async create(
@@ -248,23 +232,23 @@ export class ContractsService {
   }
 
   private async validateFreelancer(freelancerId: number): Promise<void> {
-    const freelancer = await this.prisma.freelancer.findUnique({
-      where: { FreelancerID: freelancerId },
-      select: { FreelancerID: true },
+    const taiKhoan = await this.prisma.taiKhoan.findUnique({
+      where: { TaiKhoanID: freelancerId },
+      select: { TaiKhoanID: true },
     });
 
-    if (!freelancer) {
+    if (!taiKhoan) {
       throw new BadRequestException('Freelancer khong ton tai');
     }
   }
 
   private async validateNguoiThue(nguoiThueId: number): Promise<void> {
-    const nguoiThue = await this.prisma.nguoiThue.findUnique({
-      where: { NguoiThueID: nguoiThueId },
-      select: { NguoiThueID: true },
+    const taiKhoan = await this.prisma.taiKhoan.findUnique({
+      where: { TaiKhoanID: nguoiThueId },
+      select: { TaiKhoanID: true },
     });
 
-    if (!nguoiThue) {
+    if (!taiKhoan) {
       throw new BadRequestException('Nguoi thue khong ton tai');
     }
   }
@@ -296,21 +280,21 @@ export class ContractsService {
         moTa: contract.YeuCau.MoTa,
       },
       freelancer: {
-        freelancerId: contract.Freelancer.FreelancerID,
-        taiKhoanId: contract.Freelancer.TaiKhoan.TaiKhoanID,
-        hoTen: contract.Freelancer.TaiKhoan.HoTen,
-        email: contract.Freelancer.TaiKhoan.Email,
+        freelancerId: contract.FreelancerID,
+        taiKhoanId: contract.Freelancer.TaiKhoanID,
+        hoTen: contract.Freelancer.HoTen,
+        email: contract.Freelancer.Email,
       },
       nguoiThue: {
-        nguoiThueId: contract.NguoiThue.NguoiThueID,
-        taiKhoanId: contract.NguoiThue.TaiKhoan.TaiKhoanID,
-        hoTen: contract.NguoiThue.TaiKhoan.HoTen,
-        email: contract.NguoiThue.TaiKhoan.Email,
+        nguoiThueId: contract.NguoiThueID,
+        taiKhoanId: contract.NguoiThue.TaiKhoanID,
+        hoTen: contract.NguoiThue.HoTen,
+        email: contract.NguoiThue.Email,
       },
       giamSat: contract.GiamSat
         ? {
-            giamSatId: contract.GiamSat.GiamSatID,
-            tenDonVi: contract.GiamSat.TenDonVi,
+            giamSatId: contract.GiamSat.DonViGiamSat?.GiamSatID ?? null,
+            tenDonVi: contract.GiamSat.DonViGiamSat?.TenDonVi ?? contract.GiamSat.HoTen,
           }
         : null,
     };
@@ -331,32 +315,22 @@ export class ContractsService {
   ): Promise<SupervisorResponseDto> {
     const contract = await this.findContractOrThrow(id);
 
-    // Validate supervisor exists
-    const supervisor = await this.prisma.donViGiamSat.findUnique({
-      where: { GiamSatID: payload.giamSatId },
+    // Validate supervisor exists (giamSatId is now TaiKhoanID)
+    const supervisorProfile = await this.prisma.donViGiamSat.findFirst({
+      where: { TaiKhoanID: payload.giamSatId },
       select: { GiamSatID: true, TrangThai: true },
     });
 
-    if (!supervisor) {
+    if (!supervisorProfile) {
       throw new BadRequestException('Don vi giam sat khong ton tai');
     }
 
-    if (supervisor.TrangThai !== 'HoatDong') {
+    if (supervisorProfile.TrangThai !== 'HoatDong') {
       throw new BadRequestException('Don vi giam sat khong hoat dong');
     }
 
     if (payload.phiGiamSat < 0) {
       throw new BadRequestException('Phi giam sat phai lon hon hoac bang 0');
-    }
-
-    // Get freelancer from contract
-    const freelancer = await this.prisma.freelancer.findUnique({
-      where: { FreelancerID: contract.FreelancerID },
-      select: { FreelancerID: true },
-    });
-
-    if (!freelancer) {
-      throw new BadRequestException('Freelancer khong ton tai');
     }
 
     // Create YeuCauGiamSat record

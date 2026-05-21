@@ -18,7 +18,7 @@ export class FreelancersService {
     await this.findFreelancerOrThrow(freelancerId);
 
     const rows = await this.prisma.freelancerKyNang.findMany({
-      where: { FreelancerID: freelancerId },
+      where: { TaiKhoanID: freelancerId },
       select: {
         KyNang: { select: { KyNangID: true, TenKyNang: true } },
       },
@@ -43,13 +43,13 @@ export class FreelancersService {
 
     await this.prisma.$transaction([
       this.prisma.freelancerKyNang.deleteMany({
-        where: { FreelancerID: freelancerId },
+        where: { TaiKhoanID: freelancerId },
       }),
       ...(payload.kyNangIds.length > 0
         ? [
             this.prisma.freelancerKyNang.createMany({
               data: payload.kyNangIds.map((kyNangId) => ({
-                FreelancerID: freelancerId,
+                TaiKhoanID: freelancerId,
                 KyNangID: kyNangId,
               })),
             }),
@@ -69,9 +69,9 @@ export class FreelancersService {
 
     await this.prisma.freelancerKyNang.upsert({
       where: {
-        FreelancerID_KyNangID: { FreelancerID: freelancerId, KyNangID: kyNangId },
+        TaiKhoanID_KyNangID: { TaiKhoanID: freelancerId, KyNangID: kyNangId },
       },
-      create: { FreelancerID: freelancerId, KyNangID: kyNangId },
+      create: { TaiKhoanID: freelancerId, KyNangID: kyNangId },
       update: {},
     });
 
@@ -85,19 +85,20 @@ export class FreelancersService {
     await this.findFreelancerOrThrow(freelancerId);
 
     await this.prisma.freelancerKyNang.deleteMany({
-      where: { FreelancerID: freelancerId, KyNangID: kyNangId },
+      where: { TaiKhoanID: freelancerId, KyNangID: kyNangId },
     });
 
     return this.getSkills(freelancerId);
   }
 
   private async findFreelancerOrThrow(freelancerId: number): Promise<void> {
-    const freelancer = await this.prisma.freelancer.findUnique({
-      where: { FreelancerID: freelancerId },
-      select: { FreelancerID: true },
+    // freelancerId is now TaiKhoanID
+    const taiKhoan = await this.prisma.taiKhoan.findUnique({
+      where: { TaiKhoanID: freelancerId },
+      select: { TaiKhoanID: true },
     });
 
-    if (!freelancer) {
+    if (!taiKhoan) {
       throw new NotFoundException('Freelancer khong ton tai');
     }
   }

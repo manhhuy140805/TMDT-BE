@@ -8,6 +8,7 @@ import {
   Put,
 } from '@nestjs/common';
 import { ContractsService } from './contracts.service';
+import { ContractFlowService } from './contract-flow.service';
 import { ProgressService } from '../progress/progress.service';
 import { ChatService } from '../chat/chat.service';
 import type {
@@ -19,6 +20,12 @@ import type {
   SupervisorResponseDto,
   UpdateContractStatusDto,
 } from './dto/contract.dto';
+import type {
+  AcceptProposalDto,
+  AcceptProposalResponseDto,
+  ConfirmCompletionDto,
+  ConfirmCompletionResponseDto,
+} from './dto/accept-proposal.dto';
 import type { ProgressListResponseDto } from '../progress/dto/progress.dto';
 import type { ConversationListResponseDto } from '../chat/dto';
 
@@ -26,6 +33,7 @@ import type { ConversationListResponseDto } from '../chat/dto';
 export class ContractsController {
   constructor(
     private readonly contractsService: ContractsService,
+    private readonly contractFlowService: ContractFlowService,
     private readonly progressService: ProgressService,
     private readonly chatService: ChatService,
   ) {}
@@ -98,5 +106,25 @@ export class ContractsController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<SupervisorResponseDto> {
     return this.contractsService.rejectSupervisor(id);
+  }
+
+  // --- Contract Flow: Accept Proposal + Escrow + Confirm Completion ---
+
+  @Post('accept-proposal')
+  acceptProposal(
+    @Body() payload: AcceptProposalDto,
+  ): Promise<AcceptProposalResponseDto> {
+    return this.contractFlowService.acceptProposal(payload);
+  }
+
+  @Put(':id/confirm-completion')
+  confirmCompletion(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() payload: Omit<ConfirmCompletionDto, 'congViecId'>,
+  ): Promise<ConfirmCompletionResponseDto> {
+    return this.contractFlowService.confirmCompletion({
+      ...payload,
+      congViecId: id,
+    });
   }
 }

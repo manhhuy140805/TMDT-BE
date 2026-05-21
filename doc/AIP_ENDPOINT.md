@@ -182,3 +182,25 @@
 | GET | /admin/supervisors | Lay danh sach giam sat |
 | PUT | /admin/supervisors/:id/approve | Duyet don vi giam sat |
 | GET | /admin/statistics | Lay thong ke he thong |
+
+
+### Contract Flow (Escrow)
+| Method | Path | Mo ta |
+|--------|------|-------|
+| POST | /contracts/accept-proposal | Chap nhan bao gia + tao hop dong + escrow |
+| PUT | /contracts/:id/confirm-completion | Xac nhan hoan thanh (tung ben) |
+
+### WebSocket - Realtime Chat
+| Event | Direction | Mo ta |
+|-------|-----------|-------|
+| joinConversation | Client->Server | Join room cuoc hoi thoai |
+| leaveConversation | Client->Server | Leave room |
+| sendMessage | Client->Server | Gui tin nhan (luu DB + broadcast) |
+| markAsRead | Client->Server | Danh dau da doc |
+| typing | Client->Server | Typing indicator |
+| newMessage | Server->Client | Tin nhan moi trong room |
+| messageNotification | Server->Client | Thong bao tin nhan cho user ngoai room |
+| messagesRead | Server->Client | Ai do da doc tin nhan |
+| userTyping | Server->Client | Ai do dang go |
+
+WebSocket URL: `http://localhost:3000/chat?userId=1`

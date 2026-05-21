@@ -8,7 +8,6 @@ export type ReviewDto = {
   diemSo: number;
   binhLuan: string | null;
   loaiDanhGia: LoaiDanhGia;
-  giamSatId: number | null;
   ngayTao: string;
 };
 
@@ -28,7 +27,6 @@ export type CreateReviewDto = {
   diemSo: number;
   binhLuan?: string;
   loaiDanhGia: LoaiDanhGia;
-  giamSatId?: number;
 };
 
 export type ReviewMutationResponseDto = {

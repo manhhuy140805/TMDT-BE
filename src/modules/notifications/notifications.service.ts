@@ -17,7 +17,6 @@ const NOTIFICATION_SELECT = {
   NoiDung: true,
   LoaiThongBao: true,
   DaDoc: true,
-  GiamSatID: true,
   NgayTao: true,
 } as const;
 
@@ -89,7 +88,6 @@ export class NotificationsService {
       noiDung: notification.NoiDung,
       loaiThongBao: notification.LoaiThongBao,
       daDoc: notification.DaDoc,
-      giamSatId: notification.GiamSatID,
       ngayTao: notification.NgayTao.toISOString(),
     };
   }

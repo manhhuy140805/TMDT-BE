@@ -15,7 +15,7 @@ export type ProposalDto = {
 
 export type ProposalWithDetailsDto = ProposalDto & {
   freelancer: {
-    freelancerId: number;
+    freelancerId: number | null;
     taiKhoanId: number;
     hoTen: string;
     email: string;

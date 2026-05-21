@@ -1,3 +1,6 @@
+// SCHEMA MOI - Refactored: Tat ca FK nghiep vu dung TaiKhoanID truc tiep
+// Bang NguoiThue, Freelancer, DonViGiamSat chi la profile bo sung
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -6,6 +9,8 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// ============ ENUMS ============
 
 enum GioiTinh {
   Nam
@@ -149,7 +154,6 @@ enum LoaiDanhGia {
   GiamSat_DanhGia_Freelancer
   GiamSat_DanhGia_NguoiThue
 }
-
 enum LoaiThongBao {
   HeThong
   YeuCau
@@ -160,72 +164,29 @@ enum LoaiThongBao {
   ThanhToan
   DanhGia
 }
-
 enum TrangThaiBaoCao {
   ChoXuLy
   DangXuLy
   DaXuLy
   HuyBo
 }
-
 enum LoaiGiamKhuyenMai {
   PhanTram
   SoTienCo
 }
-
 enum TrangThaiKhuyenMai {
   HoatDong
   HetHan
   ThuHoi
 }
 
-model LoaiDichVu {
-  LoaiDichVuID Int     @id @default(autoincrement())
-  TenLoai      String  @db.VarChar(100)
-  MoTa         String? @db.VarChar(255)
-  HinhAnh      String? @db.VarChar(255)
-
-  YeuCaus YeuCau[]
-}
-
-model KyNang {
-  KyNangID  Int    @id @default(autoincrement())
-  TenKyNang String @unique(map: "uq_tenky_nang") @db.VarChar(100)
-  MoTa      String? @db.VarChar(255)
-
-  YeuCauKyNangs     YeuCauKyNang[]
-  FreelancerKyNangs FreelancerKyNang[]
-}
-
-model YeuCauKyNang {
-  YeuCauID Int
-  KyNangID Int
-
-  YeuCau YeuCau @relation(fields: [YeuCauID], references: [YeuCauID], onDelete: Cascade)
-  KyNang KyNang @relation(fields: [KyNangID], references: [KyNangID], onDelete: Cascade)
-
-  @@id([YeuCauID, KyNangID])
-  @@index([YeuCauID])
-  @@index([KyNangID])
-}
-
-model FreelancerKyNang {
-  FreelancerID Int
-  KyNangID     Int
-
-  Freelancer Freelancer @relation(fields: [FreelancerID], references: [FreelancerID], onDelete: Cascade)
-  KyNang     KyNang     @relation(fields: [KyNangID], references: [KyNangID], onDelete: Cascade)
-
-  @@id([FreelancerID, KyNangID])
-  @@index([FreelancerID])
-  @@index([KyNangID])
-}
+// ============ CORE: TAI KHOAN ============
 
 model TaiKhoan {
   TaiKhoanID  Int               @id @default(autoincrement())
-  TenDangNhap String            @unique(map: "uq_tendangnhap") @db.VarChar(50)
+  TenDangNhap String            @unique @db.VarChar(50)
   MatKhau     String            @db.VarChar(255)
-  Email       String            @unique(map: "uq_email") @db.VarChar(100)
+  Email       String            @unique @db.VarChar(100)
   HoTen       String            @db.VarChar(100)
   SoDienThoai String?           @db.VarChar(15)
   GioiTinh    GioiTinh?
@@ -235,43 +196,66 @@ model TaiKhoan {
   NgayTao     DateTime          @default(now()) @db.Timestamp(3)
   NgayCapNhat DateTime          @updatedAt @db.Timestamp(3)
 
-  NguoiThues                  NguoiThue[]
-  Freelancers                 Freelancer[]
-  DonViGiamSats               DonViGiamSat[]
-  TranhChapsNguoiGui          TranhChap[]          @relation("TranhChapNguoiGui")
-  BangChungTranhChapsNguoiNop BangChungTranhChap[] @relation("BangChungNguoiNop")
-  CuocHoiThoaisThanhVien1     CuocHoiThoai[]       @relation("CuocHoiThoaiThanhVien1")
-  CuocHoiThoaisThanhVien2     CuocHoiThoai[]       @relation("CuocHoiThoaiThanhVien2")
-  TinNhansNguoiGui            TinNhan[]            @relation("TinNhanNguoiGui")
-  DanhGiasNguoiDanhGia        DanhGia[]            @relation("DanhGiaNguoiDanhGia")
-  DanhGiasNguoiDuocDanhGia    DanhGia[]            @relation("DanhGiaNguoiDuocDanhGia")
-  ThongBaos                   ThongBao[]
-  BaoCaosNguoiBaoCao          BaoCao[]             @relation("BaoCaoNguoiBaoCao")
-  BaoCaosNguoiBiCao           BaoCao[]             @relation("BaoCaoNguoiBiCao")
-  BaoCaosAdminXuLy            BaoCao[]             @relation("BaoCaoAdminXuLy")
+  // Profile bo sung (1-1)
+  NguoiThue    NguoiThue?
+  Freelancer   Freelancer?
+  DonViGiamSat DonViGiamSat?
+
+  // FK nghiep vu - nguoi tao yeu cau
+  YeuCaus          YeuCau[]       @relation("YeuCauNguoiTao")
+  // FK nghiep vu - giam sat duoc chon cho yeu cau
+  YeuCausGiamSat   YeuCau[]       @relation("YeuCauGiamSat")
+  // FK nghiep vu - bao gia
+  BaoGias          BaoGia[]
+  // FK nghiep vu - hop dong
+  CongViecsNguoiThue  CongViec[] @relation("CongViecNguoiThue")
+  CongViecsFreelancer CongViec[] @relation("CongViecFreelancer")
+  CongViecsGiamSat    CongViec[] @relation("CongViecGiamSat")
+  // Tien do
+  TienDos          TienDo[]
+  // Thanh toan
+  ThanhToans       ThanhToan[]
+  // Chat
+  CuocHoiThoais1   CuocHoiThoai[] @relation("ChatThanhVien1")
+  CuocHoiThoais2   CuocHoiThoai[] @relation("ChatThanhVien2")
+  TinNhans         TinNhan[]
+  // Tranh chap
+  TranhChaps       TranhChap[]
+  BangChungs       BangChungTranhChap[]
+  // Danh gia
+  DanhGiasGui      DanhGia[] @relation("DanhGiaNguoiGui")
+  DanhGiasNhan     DanhGia[] @relation("DanhGiaNguoiNhan")
+  // Thong bao
+  ThongBaos        ThongBao[]
+  // Bao cao
+  BaoCaosGui       BaoCao[] @relation("BaoCaoNguoiGui")
+  BaoCaosNhan      BaoCao[] @relation("BaoCaoNguoiNhan")
+  BaoCaosAdmin     BaoCao[] @relation("BaoCaoAdmin")
+  // Ky nang freelancer
+  FreelancerKyNangs FreelancerKyNang[]
+  // Yeu cau giam sat
+  YeuCauGiamSatsNguoiThue YeuCauGiamSat[] @relation("YCGSNguoiThue")
+  YeuCauGiamSatsFreelancer YeuCauGiamSat[] @relation("YCGSFreelancer")
+  YeuCauGiamSatsGiamSat YeuCauGiamSat[] @relation("YCGSGiamSat")
 }
+
+// ============ PROFILE BO SUNG ============
 
 model NguoiThue {
   NguoiThueID   Int     @id @default(autoincrement())
-  TaiKhoanID    Int
+  TaiKhoanID    Int     @unique
   CongTy        String? @db.VarChar(150)
   MoTa          String? @db.Text
   DiemTinCay    Decimal @default(0.00) @db.Decimal(3, 2)
   TongYeuCau    Int     @default(0)
   TyLeHoanThanh Decimal @default(0.00) @db.Decimal(5, 2)
 
-  TaiKhoan       TaiKhoan        @relation(fields: [TaiKhoanID], references: [TaiKhoanID], onDelete: Cascade)
-  YeuCaus        YeuCau[]
-  CongViecs      CongViec[]
-  YeuCauGiamSats YeuCauGiamSat[]
-  ThanhToans     ThanhToan[]
-
-  @@index([TaiKhoanID])
+  TaiKhoan TaiKhoan @relation(fields: [TaiKhoanID], references: [TaiKhoanID], onDelete: Cascade)
 }
 
 model Freelancer {
   FreelancerID  Int     @id @default(autoincrement())
-  TaiKhoanID    Int
+  TaiKhoanID    Int     @unique
   KinhNghiem    Int     @default(0)
   ChuyenGia     String? @db.VarChar(150)
   KyNang        String? @db.Text
@@ -282,19 +266,12 @@ model Freelancer {
   TongCongViec  Int     @default(0)
   TyLeHoanThanh Decimal @default(0.00) @db.Decimal(5, 2)
 
-  TaiKhoan       TaiKhoan        @relation(fields: [TaiKhoanID], references: [TaiKhoanID], onDelete: Cascade)
-  BaoGias        BaoGia[]
-  CongViecs      CongViec[]
-  YeuCauGiamSats YeuCauGiamSat[]
-  TienDos        TienDo[]
-  FreelancerKyNangs FreelancerKyNang[]
-
-  @@index([TaiKhoanID])
+  TaiKhoan TaiKhoan @relation(fields: [TaiKhoanID], references: [TaiKhoanID], onDelete: Cascade)
 }
 
 model DonViGiamSat {
   GiamSatID      Int                   @id @default(autoincrement())
-  TaiKhoanID     Int
+  TaiKhoanID     Int                   @unique
   TenDonVi       String                @db.VarChar(150)
   MoTa           String?               @db.Text
   NangLuc        String?               @db.Text
@@ -305,25 +282,50 @@ model DonViGiamSat {
   TrangThai      TrangThaiDonViGiamSat @default(ChoDuyet)
   NgayDangKy     DateTime              @default(now()) @db.Timestamp(3)
 
-  TaiKhoan             TaiKhoan             @relation(fields: [TaiKhoanID], references: [TaiKhoanID], onDelete: Cascade)
-  CongViecs            CongViec[]
-  YeuCauGiamSats       YeuCauGiamSat[]
-  TienDosXacNhan       TienDo[]
-  TranhChapsXuLy       TranhChap[]
-  BangChungTranhChaps  BangChungTranhChap[]
-  KetLuanTranhChaps    KetLuanTranhChap[]
-  ThanhToansPhiGiamSat ThanhToan[]
-  CuocHoiThoais        CuocHoiThoai[]
-  DanhGiasLienQuan     DanhGia[]
-  ThongBaosLienQuan    ThongBao[]
-
-  @@index([TaiKhoanID])
+  TaiKhoan TaiKhoan @relation(fields: [TaiKhoanID], references: [TaiKhoanID], onDelete: Cascade)
 }
+
+// ============ DANH MUC ============
+
+model LoaiDichVu {
+  LoaiDichVuID Int     @id @default(autoincrement())
+  TenLoai      String  @db.VarChar(100)
+  MoTa         String? @db.VarChar(255)
+  HinhAnh      String? @db.VarChar(255)
+  YeuCaus      YeuCau[]
+}
+
+model KyNang {
+  KyNangID  Int    @id @default(autoincrement())
+  TenKyNang String @unique @db.VarChar(100)
+  MoTa      String? @db.VarChar(255)
+  YeuCauKyNangs     YeuCauKyNang[]
+  FreelancerKyNangs FreelancerKyNang[]
+}
+
+model YeuCauKyNang {
+  YeuCauID Int
+  KyNangID Int
+  YeuCau   YeuCau @relation(fields: [YeuCauID], references: [YeuCauID], onDelete: Cascade)
+  KyNang   KyNang @relation(fields: [KyNangID], references: [KyNangID], onDelete: Cascade)
+  @@id([YeuCauID, KyNangID])
+}
+
+model FreelancerKyNang {
+  TaiKhoanID Int    // TaiKhoanID cua freelancer (thay vi FreelancerID)
+  KyNangID   Int
+  TaiKhoan   TaiKhoan @relation(fields: [TaiKhoanID], references: [TaiKhoanID], onDelete: Cascade)
+  KyNang     KyNang   @relation(fields: [KyNangID], references: [KyNangID], onDelete: Cascade)
+  @@id([TaiKhoanID, KyNangID])
+}
+
+// ============ NGHIEP VU CHINH ============
 
 model YeuCau {
   YeuCauID      Int             @id @default(autoincrement())
-  NguoiThueID   Int
+  TaiKhoanID    Int             // Nguoi tao yeu cau (NguoiThue)
   LoaiDichVuID  Int
+  GiamSatID     Int?            // TaiKhoanID cua don vi giam sat (optional)
   TieuDe        String          @db.VarChar(200)
   MoTa          String          @db.Text
   NganSachMin   Decimal         @default(0.00) @db.Decimal(15, 2)
@@ -335,21 +337,23 @@ model YeuCau {
   NgayTao       DateTime        @default(now()) @db.Timestamp(3)
   NgayCapNhat   DateTime        @updatedAt @db.Timestamp(3)
 
-  NguoiThue    NguoiThue      @relation(fields: [NguoiThueID], references: [NguoiThueID])
-  LoaiDichVu   LoaiDichVu     @relation(fields: [LoaiDichVuID], references: [LoaiDichVuID])
-  BaoGias      BaoGia[]
-  CongViecs    CongViec[]
+  NguoiTao      TaiKhoan       @relation("YeuCauNguoiTao", fields: [TaiKhoanID], references: [TaiKhoanID])
+  GiamSat       TaiKhoan?      @relation("YeuCauGiamSat", fields: [GiamSatID], references: [TaiKhoanID])
+  LoaiDichVu    LoaiDichVu     @relation(fields: [LoaiDichVuID], references: [LoaiDichVuID])
+  BaoGias       BaoGia[]
+  CongViecs     CongViec[]
   YeuCauKyNangs YeuCauKyNang[]
 
-  @@index([NguoiThueID], map: "idx_yeucau_nguoithue")
-  @@index([TrangThai], map: "idx_yeucau_trangthai")
+  @@index([TaiKhoanID])
+  @@index([TrangThai])
   @@index([LoaiDichVuID])
+  @@index([GiamSatID])
 }
 
 model BaoGia {
   BaoGiaID         Int             @id @default(autoincrement())
   YeuCauID         Int
-  FreelancerID     Int
+  TaiKhoanID       Int             // TaiKhoanID cua freelancer gui bao gia
   GiaDeXuat        Decimal         @db.Decimal(15, 2)
   ThoiGianThucHien Int
   NoiDung          String?         @db.Text
@@ -357,32 +361,36 @@ model BaoGia {
   NgayTao          DateTime        @default(now()) @db.Timestamp(3)
   NgayCapNhat      DateTime        @updatedAt @db.Timestamp(3)
 
-  YeuCau     YeuCau     @relation(fields: [YeuCauID], references: [YeuCauID])
-  Freelancer Freelancer @relation(fields: [FreelancerID], references: [FreelancerID])
+  YeuCau     YeuCau   @relation(fields: [YeuCauID], references: [YeuCauID])
+  Freelancer TaiKhoan @relation(fields: [TaiKhoanID], references: [TaiKhoanID])
 
-  @@index([YeuCauID], map: "idx_baogia_yeucau")
-  @@index([FreelancerID])
+  @@index([YeuCauID])
+  @@index([TaiKhoanID])
 }
 
 model CongViec {
-  CongViecID       Int                      @id @default(autoincrement())
-  YeuCauID         Int
-  FreelancerID     Int
-  NguoiThueID      Int
-  GiaThoa          Decimal                  @db.Decimal(15, 2)
-  ThoiGianThoa     Int
-  TrangThai        TrangThaiCongViec        @default(MoiTao)
-  NgayBatDau       DateTime?                @db.Timestamp(3)
-  NgayKetThuc      DateTime?                @db.Timestamp(3)
-  GiamSatID        Int?
-  TrangThaiGiamSat TrangThaiGiamSatCongViec @default(KhongCo)
-  PhiGiamSat       Decimal                  @default(0.00) @db.Decimal(15, 2)
-  NgayTao          DateTime                 @default(now()) @db.Timestamp(3)
+  CongViecID          Int                      @id @default(autoincrement())
+  YeuCauID            Int
+  FreelancerID        Int                      // TaiKhoanID cua freelancer
+  NguoiThueID         Int                      // TaiKhoanID cua nguoi thue
+  GiamSatID           Int?                     // TaiKhoanID cua giam sat
+  GiaThoa             Decimal                  @db.Decimal(15, 2)
+  ThoiGianThoa        Int
+  TrangThai           TrangThaiCongViec        @default(MoiTao)
+  NgayBatDau          DateTime?                @db.Timestamp(3)
+  NgayKetThuc         DateTime?                @db.Timestamp(3)
+  TrangThaiGiamSat    TrangThaiGiamSatCongViec @default(KhongCo)
+  PhiGiamSat          Decimal                  @default(0.00) @db.Decimal(15, 2)
+  FreelancerXacNhan   Boolean                  @default(false)
+  GiamSatXacNhan      Boolean                  @default(false)
+  NguoiThueXacNhan    Boolean                  @default(false)
+  DaThanhToanEscrow   Boolean                  @default(false)
+  NgayTao             DateTime                 @default(now()) @db.Timestamp(3)
 
   YeuCau         YeuCau          @relation(fields: [YeuCauID], references: [YeuCauID])
-  Freelancer     Freelancer      @relation(fields: [FreelancerID], references: [FreelancerID])
-  NguoiThue      NguoiThue       @relation(fields: [NguoiThueID], references: [NguoiThueID])
-  GiamSat        DonViGiamSat?   @relation(fields: [GiamSatID], references: [GiamSatID], onDelete: SetNull)
+  Freelancer     TaiKhoan        @relation("CongViecFreelancer", fields: [FreelancerID], references: [TaiKhoanID])
+  NguoiThue      TaiKhoan        @relation("CongViecNguoiThue", fields: [NguoiThueID], references: [TaiKhoanID])
+  GiamSat        TaiKhoan?       @relation("CongViecGiamSat", fields: [GiamSatID], references: [TaiKhoanID])
   YeuCauGiamSats YeuCauGiamSat[]
   TienDos        TienDo[]
   TranhChaps     TranhChap[]
@@ -393,16 +401,16 @@ model CongViec {
   @@index([YeuCauID])
   @@index([FreelancerID])
   @@index([NguoiThueID])
-  @@index([TrangThai], map: "idx_congviec_trangthai")
-  @@index([GiamSatID], map: "idx_congviec_giamsat")
+  @@index([GiamSatID])
+  @@index([TrangThai])
 }
 
 model YeuCauGiamSat {
   YCGiamSatID    Int                    @id @default(autoincrement())
   CongViecID     Int
-  NguoiThueID    Int
-  GiamSatID      Int
-  FreelancerID   Int
+  NguoiThueID    Int                    // TaiKhoanID
+  GiamSatID      Int                    // TaiKhoanID
+  FreelancerID   Int                    // TaiKhoanID
   TrangThai      TrangThaiYeuCauGiamSat @default(ChoDuyet)
   LyDoTuChoi     String?                @db.Text
   PhiGiamSatThoa Decimal                @default(0.00) @db.Decimal(15, 2)
@@ -410,43 +418,56 @@ model YeuCauGiamSat {
   NgayChapNhan   DateTime?              @db.Timestamp(3)
   NgayHoanThanh  DateTime?              @db.Timestamp(3)
 
-  CongViec   CongViec     @relation(fields: [CongViecID], references: [CongViecID])
-  NguoiThue  NguoiThue    @relation(fields: [NguoiThueID], references: [NguoiThueID])
-  GiamSat    DonViGiamSat @relation(fields: [GiamSatID], references: [GiamSatID])
-  Freelancer Freelancer   @relation(fields: [FreelancerID], references: [FreelancerID])
+  CongViec   CongViec @relation(fields: [CongViecID], references: [CongViecID])
+  NguoiThue  TaiKhoan @relation("YCGSNguoiThue", fields: [NguoiThueID], references: [TaiKhoanID])
+  Freelancer TaiKhoan @relation("YCGSFreelancer", fields: [FreelancerID], references: [TaiKhoanID])
+  GiamSat    TaiKhoan @relation("YCGSGiamSat", fields: [GiamSatID], references: [TaiKhoanID])
 
   @@index([CongViecID])
-  @@index([NguoiThueID])
-  @@index([GiamSatID])
-  @@index([FreelancerID])
 }
 
 model TienDo {
   TienDoID         Int                    @id @default(autoincrement())
   CongViecID       Int
-  FreelancerID     Int
+  TaiKhoanID       Int                    // Freelancer tao tien do
   TieuDe           String                 @db.VarChar(200)
   MoTa             String?                @db.Text
   PhanTram         Int                    @default(0) @db.SmallInt
   TepDinhKem       String?                @db.VarChar(500)
-  XacNhanBoi       Int?
+  XacNhanBoi       Int?                   // TaiKhoanID cua giam sat xac nhan
   TrangThaiXacNhan TrangThaiXacNhanTienDo @default(ChuaXacNhan)
   NgayTao          DateTime               @default(now()) @db.Timestamp(3)
 
-  CongViec     CongViec      @relation(fields: [CongViecID], references: [CongViecID])
-  Freelancer   Freelancer    @relation(fields: [FreelancerID], references: [FreelancerID])
-  DonViGiamSat DonViGiamSat? @relation(fields: [XacNhanBoi], references: [GiamSatID], onDelete: SetNull)
+  CongViec   CongViec @relation(fields: [CongViecID], references: [CongViecID])
+  NguoiTao   TaiKhoan @relation(fields: [TaiKhoanID], references: [TaiKhoanID])
 
-  @@index([CongViecID], map: "idx_tiendo_congviec")
-  @@index([FreelancerID])
-  @@index([XacNhanBoi])
+  @@index([CongViecID])
+  @@index([TaiKhoanID])
+}
+
+model ThanhToan {
+  ThanhToanID  Int                 @id @default(autoincrement())
+  CongViecID   Int
+  TaiKhoanID   Int                 // Nguoi thanh toan (NguoiThue)
+  SoTien       Decimal             @db.Decimal(15, 2)
+  LoaiTT       LoaiThanhToan
+  PhuongThuc   PhuongThucThanhToan @default(Vi)
+  TrangThai    TrangThaiThanhToan  @default(ChoXuLy)
+  GhiChu       String?             @db.VarChar(255)
+  NgayTao      DateTime            @default(now()) @db.Timestamp(3)
+
+  CongViec  CongViec @relation(fields: [CongViecID], references: [CongViecID])
+  NguoiTra  TaiKhoan @relation(fields: [TaiKhoanID], references: [TaiKhoanID])
+
+  @@index([CongViecID])
+  @@index([TaiKhoanID])
 }
 
 model TranhChap {
   TranhChapID    Int                @id @default(autoincrement())
   CongViecID     Int
-  NguoiGuiID     Int
-  GiamSatID      Int?
+  NguoiGuiID     Int                // TaiKhoanID nguoi mo tranh chap
+  GiamSatID      Int?               // TaiKhoanID giam sat xu ly
   LyDo           String             @db.VarChar(255)
   MoTa           String?            @db.Text
   TrangThai      TrangThaiTranhChap @default(MoiMo)
@@ -455,175 +476,134 @@ model TranhChap {
   NgayDong       DateTime?          @db.Timestamp(3)
 
   CongViec            CongViec             @relation(fields: [CongViecID], references: [CongViecID])
-  NguoiGui            TaiKhoan             @relation("TranhChapNguoiGui", fields: [NguoiGuiID], references: [TaiKhoanID])
-  GiamSat             DonViGiamSat?        @relation(fields: [GiamSatID], references: [GiamSatID], onDelete: SetNull)
+  NguoiGui            TaiKhoan             @relation(fields: [NguoiGuiID], references: [TaiKhoanID])
   BangChungTranhChaps BangChungTranhChap[]
   KetLuanTranhChap    KetLuanTranhChap?
 
-  @@index([CongViecID], map: "idx_tranhchap_cv")
-  @@index([GiamSatID], map: "idx_tranhchap_gs")
+  @@index([CongViecID])
   @@index([NguoiGuiID])
 }
 
 model BangChungTranhChap {
   BangChungID   Int           @id @default(autoincrement())
   TranhChapID   Int
-  NguoiNopID    Int
-  GiamSatID     Int?
+  NguoiNopID    Int           // TaiKhoanID
   LoaiBangChung LoaiBangChung @default(GhiChu)
   NoiDung       String?       @db.Text
   DuongDanFile  String?       @db.VarChar(500)
   NgayNop       DateTime      @default(now()) @db.Timestamp(3)
 
-  TranhChap TranhChap     @relation(fields: [TranhChapID], references: [TranhChapID])
-  NguoiNop  TaiKhoan      @relation("BangChungNguoiNop", fields: [NguoiNopID], references: [TaiKhoanID])
-  GiamSat   DonViGiamSat? @relation(fields: [GiamSatID], references: [GiamSatID], onDelete: SetNull)
+  TranhChap TranhChap @relation(fields: [TranhChapID], references: [TranhChapID])
+  NguoiNop  TaiKhoan  @relation(fields: [NguoiNopID], references: [TaiKhoanID])
 
   @@index([TranhChapID])
   @@index([NguoiNopID])
-  @@index([GiamSatID])
 }
 
 model KetLuanTranhChap {
   KetLuanID   Int               @id @default(autoincrement())
-  TranhChapID Int               @unique(map: "uq_tranhchap")
-  GiamSatID   Int
+  TranhChapID Int               @unique
+  GiamSatID   Int               // TaiKhoanID giam sat ket luan
   KetQua      KetQuaTranhChap
   LyDo        String            @db.Text
   SoTienHoan  Decimal           @default(0.00) @db.Decimal(15, 2)
   BenChiuPhi  BenChiuPhiKetLuan @default(ChiaSe)
   NgayKetLuan DateTime          @default(now()) @db.Timestamp(3)
 
-  TranhChap TranhChap    @relation(fields: [TranhChapID], references: [TranhChapID])
-  GiamSat   DonViGiamSat @relation(fields: [GiamSatID], references: [GiamSatID])
-
-  @@index([GiamSatID])
-}
-
-model ThanhToan {
-  ThanhToanID  Int                 @id @default(autoincrement())
-  CongViecID   Int
-  NguoiThueID  Int
-  SoTien       Decimal             @db.Decimal(15, 2)
-  LoaiTT       LoaiThanhToan
-  PhuongThuc   PhuongThucThanhToan @default(Vi)
-  TrangThai    TrangThaiThanhToan  @default(ChoXuLy)
-  GiamSatID    Int?
-  PhiGiamSatTT Decimal             @default(0.00) @db.Decimal(15, 2)
-  GhiChu       String?             @db.VarChar(255)
-  NgayTao      DateTime            @default(now()) @db.Timestamp(3)
-
-  CongViec  CongViec      @relation(fields: [CongViecID], references: [CongViecID])
-  NguoiThue NguoiThue     @relation(fields: [NguoiThueID], references: [NguoiThueID])
-  GiamSat   DonViGiamSat? @relation(fields: [GiamSatID], references: [GiamSatID], onDelete: SetNull)
-
-  @@index([CongViecID])
-  @@index([NguoiThueID])
-  @@index([GiamSatID])
+  TranhChap TranhChap @relation(fields: [TranhChapID], references: [TranhChapID])
 }
 
 model CuocHoiThoai {
   CuocHoiThoaiID Int                   @id @default(autoincrement())
   CongViecID     Int?
-  ThanhVien1ID   Int
-  ThanhVien2ID   Int
-  GiamSatID      Int?
+  ThanhVien1ID   Int                   // TaiKhoanID
+  ThanhVien2ID   Int                   // TaiKhoanID
   TinNhanCuoi    DateTime?             @db.Timestamp(3)
   TrangThai      TrangThaiCuocHoiThoai @default(DangMo)
   NgayTao        DateTime              @default(now()) @db.Timestamp(3)
 
-  CongViec   CongViec?     @relation(fields: [CongViecID], references: [CongViecID], onDelete: SetNull)
-  ThanhVien1 TaiKhoan      @relation("CuocHoiThoaiThanhVien1", fields: [ThanhVien1ID], references: [TaiKhoanID])
-  ThanhVien2 TaiKhoan      @relation("CuocHoiThoaiThanhVien2", fields: [ThanhVien2ID], references: [TaiKhoanID])
-  GiamSat    DonViGiamSat? @relation(fields: [GiamSatID], references: [GiamSatID], onDelete: SetNull)
+  CongViec   CongViec?  @relation(fields: [CongViecID], references: [CongViecID], onDelete: SetNull)
+  ThanhVien1 TaiKhoan   @relation("ChatThanhVien1", fields: [ThanhVien1ID], references: [TaiKhoanID])
+  ThanhVien2 TaiKhoan   @relation("ChatThanhVien2", fields: [ThanhVien2ID], references: [TaiKhoanID])
   TinNhans   TinNhan[]
 
   @@index([CongViecID])
   @@index([ThanhVien1ID])
   @@index([ThanhVien2ID])
-  @@index([GiamSatID])
 }
 
 model TinNhan {
   TinNhanID      Int         @id @default(autoincrement())
   CuocHoiThoaiID Int
-  NguoiGuiID     Int
+  NguoiGuiID     Int         // TaiKhoanID
   NoiDung        String      @db.Text
   LoaiTin        LoaiTinNhan @default(VanBan)
   DaDoc          Boolean     @default(false)
   NgayTao        DateTime    @default(now()) @db.Timestamp(3)
 
   CuocHoiThoai CuocHoiThoai @relation(fields: [CuocHoiThoaiID], references: [CuocHoiThoaiID])
-  NguoiGui     TaiKhoan     @relation("TinNhanNguoiGui", fields: [NguoiGuiID], references: [TaiKhoanID])
+  NguoiGui     TaiKhoan     @relation(fields: [NguoiGuiID], references: [TaiKhoanID])
 
-  @@index([CuocHoiThoaiID], map: "idx_tinhan_cuoc")
+  @@index([CuocHoiThoaiID])
   @@index([NguoiGuiID])
 }
 
 model DanhGia {
   DanhGiaID      Int         @id @default(autoincrement())
   CongViecID     Int
-  NguoiDanhGiaID Int
-  NguoiDuocDGID  Int
+  NguoiDanhGiaID Int         // TaiKhoanID
+  NguoiDuocDGID  Int         // TaiKhoanID
   DiemSo         Int         @db.SmallInt
   BinhLuan       String?     @db.Text
   LoaiDanhGia    LoaiDanhGia
-  GiamSatID      Int?
   NgayTao        DateTime    @default(now()) @db.Timestamp(3)
 
-  CongViec     CongViec      @relation(fields: [CongViecID], references: [CongViecID])
-  NguoiDanhGia TaiKhoan      @relation("DanhGiaNguoiDanhGia", fields: [NguoiDanhGiaID], references: [TaiKhoanID])
-  NguoiDuocDG  TaiKhoan      @relation("DanhGiaNguoiDuocDanhGia", fields: [NguoiDuocDGID], references: [TaiKhoanID])
-  GiamSat      DonViGiamSat? @relation(fields: [GiamSatID], references: [GiamSatID], onDelete: SetNull)
+  CongViec     CongViec @relation(fields: [CongViecID], references: [CongViecID])
+  NguoiDanhGia TaiKhoan @relation("DanhGiaNguoiGui", fields: [NguoiDanhGiaID], references: [TaiKhoanID])
+  NguoiDuocDG  TaiKhoan @relation("DanhGiaNguoiNhan", fields: [NguoiDuocDGID], references: [TaiKhoanID])
 
   @@index([CongViecID])
   @@index([NguoiDanhGiaID])
   @@index([NguoiDuocDGID])
-  @@index([GiamSatID])
-  @@index([LoaiDanhGia], map: "idx_danhgia_loai")
 }
 
 model ThongBao {
   ThongBaoID   Int          @id @default(autoincrement())
-  TaiKhoanID   Int
+  TaiKhoanID   Int          // Nguoi nhan thong bao
   TieuDe       String       @db.VarChar(200)
   NoiDung      String?      @db.Text
   LoaiThongBao LoaiThongBao @default(HeThong)
   DaDoc        Boolean      @default(false)
-  GiamSatID    Int?
   NgayTao      DateTime     @default(now()) @db.Timestamp(3)
 
-  TaiKhoan TaiKhoan      @relation(fields: [TaiKhoanID], references: [TaiKhoanID])
-  GiamSat  DonViGiamSat? @relation(fields: [GiamSatID], references: [GiamSatID], onDelete: SetNull)
+  TaiKhoan TaiKhoan @relation(fields: [TaiKhoanID], references: [TaiKhoanID])
 
-  @@index([TaiKhoanID, DaDoc], map: "idx_thongbao_taikhoan")
-  @@index([GiamSatID])
+  @@index([TaiKhoanID, DaDoc])
 }
 
 model BaoCao {
   BaoCaoID      Int             @id @default(autoincrement())
-  NguoiBaoCaoID Int
-  NguoiBiCaoID  Int
+  NguoiBaoCaoID Int             // TaiKhoanID
+  NguoiBiCaoID  Int             // TaiKhoanID
   LyDo          String          @db.VarChar(255)
   MoTa          String?         @db.Text
   TrangThai     TrangThaiBaoCao @default(ChoXuLy)
   KetQua        String?         @db.Text
-  AdminXuLyID   Int?
+  AdminXuLyID   Int?            // TaiKhoanID admin
   NgayTao       DateTime        @default(now()) @db.Timestamp(3)
   NgayXuLy      DateTime?       @db.Timestamp(3)
 
-  NguoiBaoCao TaiKhoan  @relation("BaoCaoNguoiBaoCao", fields: [NguoiBaoCaoID], references: [TaiKhoanID])
-  NguoiBiCao  TaiKhoan  @relation("BaoCaoNguoiBiCao", fields: [NguoiBiCaoID], references: [TaiKhoanID])
-  AdminXuLy   TaiKhoan? @relation("BaoCaoAdminXuLy", fields: [AdminXuLyID], references: [TaiKhoanID], onDelete: SetNull)
+  NguoiBaoCao TaiKhoan  @relation("BaoCaoNguoiGui", fields: [NguoiBaoCaoID], references: [TaiKhoanID])
+  NguoiBiCao  TaiKhoan  @relation("BaoCaoNguoiNhan", fields: [NguoiBiCaoID], references: [TaiKhoanID])
+  AdminXuLy   TaiKhoan? @relation("BaoCaoAdmin", fields: [AdminXuLyID], references: [TaiKhoanID])
 
   @@index([NguoiBaoCaoID])
   @@index([NguoiBiCaoID])
-  @@index([AdminXuLyID])
 }
 
 model KhuyenMai {
   KhuyenMaiID Int                @id @default(autoincrement())
-  MaCode      String             @unique(map: "uq_macode") @db.VarChar(50)
+  MaCode      String             @unique @db.VarChar(50)
   LoaiGiam    LoaiGiamKhuyenMai
   GiaTriGiam  Decimal            @db.Decimal(15, 2)
   GiaTriToiDa Decimal?           @db.Decimal(15, 2)

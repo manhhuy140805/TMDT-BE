@@ -16,13 +16,11 @@ import type { Prisma } from '@prisma/client';
 const PAYMENT_SELECT = {
   ThanhToanID: true,
   CongViecID: true,
-  NguoiThueID: true,
+  TaiKhoanID: true,
   SoTien: true,
   LoaiTT: true,
   PhuongThuc: true,
   TrangThai: true,
-  GiamSatID: true,
-  PhiGiamSatTT: true,
   GhiChu: true,
   NgayTao: true,
 } as const;
@@ -74,7 +72,7 @@ export class PaymentsService {
     const payment = await this.prisma.thanhToan.create({
       data: {
         CongViecID: payload.contractId,
-        NguoiThueID: contract.NguoiThueID,
+        TaiKhoanID: contract.NguoiThueID,
         SoTien: payload.amount,
         LoaiTT: 'DatCoc',
         PhuongThuc: payload.paymentMethod,
@@ -132,9 +130,9 @@ export class PaymentsService {
     const freelancerAmount = contract.GiaThoa;
     const supervisorAmount = contract.PhiGiamSat;
 
-    // 2. Update Freelancer balance
+    // 2. Update Freelancer balance (FreelancerID is now TaiKhoanID)
     await this.prisma.freelancer.update({
-      where: { FreelancerID: contract.FreelancerID },
+      where: { TaiKhoanID: contract.FreelancerID },
       data: {
         SoDu: { increment: freelancerAmount },
       },
@@ -144,7 +142,7 @@ export class PaymentsService {
     const releasePayment = await this.prisma.thanhToan.create({
       data: {
         CongViecID: contract.CongViecID,
-        NguoiThueID: contract.NguoiThueID,
+        TaiKhoanID: contract.NguoiThueID,
         SoTien: freelancerAmount,
         LoaiTT: 'ThanhToanCuoi',
         PhuongThuc: 'Vi',
@@ -159,13 +157,11 @@ export class PaymentsService {
       await this.prisma.thanhToan.create({
         data: {
           CongViecID: contract.CongViecID,
-          NguoiThueID: contract.NguoiThueID,
-          GiamSatID: contract.GiamSatID,
+          TaiKhoanID: contract.NguoiThueID,
           SoTien: supervisorAmount,
           LoaiTT: 'PhiGiamSat',
           PhuongThuc: 'Vi',
           TrangThai: 'ThanhCong',
-          PhiGiamSatTT: supervisorAmount,
           GhiChu: `Thanh toan phi giam sat cho: ${contract.GiamSatID}`,
         },
       });
@@ -211,7 +207,7 @@ export class PaymentsService {
     const refundRecord = await this.prisma.thanhToan.create({
       data: {
         CongViecID: payment.CongViecID,
-        NguoiThueID: payment.NguoiThueID,
+        TaiKhoanID: payment.TaiKhoanID,
         SoTien: payment.SoTien,
         LoaiTT: 'HoanTien',
         PhuongThuc: payment.PhuongThuc,
@@ -240,13 +236,11 @@ export class PaymentsService {
     return {
       thanhToanId: payment.ThanhToanID,
       congViecId: payment.CongViecID,
-      nguoiThueId: payment.NguoiThueID,
+      nguoiThueId: payment.TaiKhoanID,
       soTien: payment.SoTien.toString(),
       loaiTT: payment.LoaiTT,
       phuongThuc: payment.PhuongThuc,
       trangThai: payment.TrangThai,
-      giamSatId: payment.GiamSatID,
-      phiGiamSatTT: payment.PhiGiamSatTT.toString(),
       ghiChu: payment.GhiChu,
       ngayTao: payment.NgayTao.toISOString(),
     };

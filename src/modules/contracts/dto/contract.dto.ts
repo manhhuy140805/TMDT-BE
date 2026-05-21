@@ -38,7 +38,7 @@ export type ContractWithDetailsDto = ContractDto & {
     email: string;
   };
   giamSat: {
-    giamSatId: number;
+    giamSatId: number | null;
     tenDonVi: string;
   } | null;
 };

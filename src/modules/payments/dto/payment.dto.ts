@@ -12,8 +12,6 @@ export type PaymentDto = {
   loaiTT: LoaiThanhToan;
   phuongThuc: PhuongThucThanhToan;
   trangThai: TrangThaiThanhToan;
-  giamSatId: number | null;
-  phiGiamSatTT: string;
   ghiChu: string | null;
   ngayTao: string;
 };

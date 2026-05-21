@@ -7,7 +7,6 @@ export type NotificationDto = {
   noiDung: string | null;
   loaiThongBao: LoaiThongBao;
   daDoc: boolean;
-  giamSatId: number | null;
   ngayTao: string;
 };
 

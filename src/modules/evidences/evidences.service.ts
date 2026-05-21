@@ -16,7 +16,6 @@ const EVIDENCE_SELECT = {
   BangChungID: true,
   TranhChapID: true,
   NguoiNopID: true,
-  GiamSatID: true,
   LoaiBangChung: true,
   NoiDung: true,
   DuongDanFile: true,
@@ -73,20 +72,10 @@ export class EvidencesService {
       throw new BadRequestException('Nguoi nop khong ton tai');
     }
 
-    if (payload.giamSatId) {
-      const giamSat = await this.prisma.donViGiamSat.findUnique({
-        where: { GiamSatID: payload.giamSatId },
-      });
-      if (!giamSat) {
-        throw new BadRequestException('Don vi giam sat khong ton tai');
-      }
-    }
-
     const evidence = await this.prisma.bangChungTranhChap.create({
       data: {
         TranhChapID: disputeId,
         NguoiNopID: payload.nguoiNopId,
-        GiamSatID: payload.giamSatId || null,
         LoaiBangChung: payload.loaiBangChung,
         NoiDung: payload.noiDung,
         DuongDanFile: payload.duongDanFile,
@@ -124,7 +113,6 @@ export class EvidencesService {
       bangChungId: evidence.BangChungID,
       tranhChapId: evidence.TranhChapID,
       nguoiNopId: evidence.NguoiNopID,
-      giamSatId: evidence.GiamSatID,
       loaiBangChung: evidence.LoaiBangChung,
       noiDung: evidence.NoiDung,
       duongDanFile: evidence.DuongDanFile,

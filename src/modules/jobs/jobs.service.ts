@@ -21,8 +21,9 @@ import type {
 
 const JOB_SELECT = {
   YeuCauID: true,
-  NguoiThueID: true,
+  TaiKhoanID: true,
   LoaiDichVuID: true,
+  GiamSatID: true,
   TieuDe: true,
   MoTa: true,
   NganSachMin: true,
@@ -33,21 +34,30 @@ const JOB_SELECT = {
   YeuCauGiamSat: true,
   NgayTao: true,
   NgayCapNhat: true,
-  NguoiThue: {
+  NguoiTao: {
     select: {
-      TaiKhoan: {
-        select: {
-          TaiKhoanID: true,
-          HoTen: true,
-          Email: true,
-        },
-      },
+      TaiKhoanID: true,
+      HoTen: true,
+      Email: true,
     },
   },
   LoaiDichVu: {
     select: {
       LoaiDichVuID: true,
       TenLoai: true,
+    },
+  },
+  GiamSat: {
+    select: {
+      TaiKhoanID: true,
+      HoTen: true,
+      Email: true,
+      DonViGiamSat: {
+        select: {
+          GiamSatID: true,
+          TenDonVi: true,
+        },
+      },
     },
   },
   YeuCauKyNangs: {
@@ -147,17 +157,17 @@ export class JobsService {
   }
 
   async findByUserId(userId: number): Promise<JobsListResponseDto> {
-    const nguoiThue = await this.prisma.nguoiThue.findFirst({
+    const taiKhoan = await this.prisma.taiKhoan.findUnique({
       where: { TaiKhoanID: userId },
-      select: { NguoiThueID: true },
+      select: { TaiKhoanID: true },
     });
 
-    if (!nguoiThue) {
+    if (!taiKhoan) {
       throw new NotFoundException('Nguoi thue khong ton tai');
     }
 
     const jobs = await this.prisma.yeuCau.findMany({
-      where: { NguoiThueID: nguoiThue.NguoiThueID },
+      where: { TaiKhoanID: userId },
       select: JOB_SELECT,
       orderBy: { NgayTao: 'desc' },
     });
@@ -196,16 +206,23 @@ export class JobsService {
       await this.validateKyNangIds(kyNangIds);
     }
 
+    // Validate giamSatId if provided
+    const giamSatId = payload.giamSatId ?? null;
+    if (giamSatId) {
+      await this.validateGiamSat(giamSatId);
+    }
+
     const job = await this.prisma.yeuCau.create({
       data: {
-        NguoiThueID: payload.nguoiThueId,
+        TaiKhoanID: payload.nguoiThueId,
         LoaiDichVuID: payload.loaiDichVuId,
         TieuDe: tieuDe,
         MoTa: moTa,
         NganSachMin: payload.nganSachMin,
         NganSachMax: payload.nganSachMax,
         ThoiHan: thoiHan,
-        YeuCauGiamSat: payload.yeuCauGiamSat ?? false,
+        YeuCauGiamSat: giamSatId ? true : (payload.yeuCauGiamSat ?? false),
+        GiamSatID: giamSatId,
         TrangThai: 'DangMo',
         YeuCauKyNangs: kyNangIds.length > 0
           ? {
@@ -361,12 +378,12 @@ export class JobsService {
   }
 
   private async validateNguoiThue(nguoiThueId: number): Promise<void> {
-    const nguoiThue = await this.prisma.nguoiThue.findUnique({
-      where: { NguoiThueID: nguoiThueId },
-      select: { NguoiThueID: true },
+    const taiKhoan = await this.prisma.taiKhoan.findUnique({
+      where: { TaiKhoanID: nguoiThueId },
+      select: { TaiKhoanID: true, VaiTro: true },
     });
 
-    if (!nguoiThue) {
+    if (!taiKhoan) {
       throw new BadRequestException('Nguoi thue khong ton tai');
     }
   }
@@ -394,6 +411,21 @@ export class JobsService {
       throw new BadRequestException(
         `Ky nang khong ton tai: ${missing.join(', ')}`,
       );
+    }
+  }
+
+  private async validateGiamSat(giamSatId: number): Promise<void> {
+    const giamSat = await this.prisma.donViGiamSat.findFirst({
+      where: { TaiKhoanID: giamSatId },
+      select: { GiamSatID: true, TrangThai: true },
+    });
+
+    if (!giamSat) {
+      throw new BadRequestException('Don vi giam sat khong ton tai');
+    }
+
+    if (giamSat.TrangThai !== 'HoatDong') {
+      throw new BadRequestException('Don vi giam sat khong hoat dong');
     }
   }
 
@@ -461,7 +493,7 @@ export class JobsService {
 
     return {
       yeuCauId: job.YeuCauID,
-      nguoiThueId: job.NguoiThueID,
+      nguoiThueId: job.TaiKhoanID,
       loaiDichVuId: job.LoaiDichVuID,
       tieuDe: job.TieuDe,
       moTa: job.MoTa,
@@ -471,17 +503,21 @@ export class JobsService {
       trangThai: job.TrangThai,
       soLuongBaoGia: job.SoLuongBaoGia,
       yeuCauGiamSat: job.YeuCauGiamSat,
+      giamSatId: job.GiamSatID,
       ngayTao: job.NgayTao.toISOString(),
       ngayCapNhat: job.NgayCapNhat.toISOString(),
       nguoiThue: {
-        taiKhoanId: job.NguoiThue.TaiKhoan.TaiKhoanID,
-        hoTen: job.NguoiThue.TaiKhoan.HoTen,
-        email: job.NguoiThue.TaiKhoan.Email,
+        taiKhoanId: job.NguoiTao.TaiKhoanID,
+        hoTen: job.NguoiTao.HoTen,
+        email: job.NguoiTao.Email,
       },
       loaiDichVu: {
         loaiDichVuId: job.LoaiDichVu.LoaiDichVuID,
         tenLoai: job.LoaiDichVu.TenLoai,
       },
+      giamSat: job.GiamSat
+        ? { giamSatId: job.GiamSat.DonViGiamSat?.GiamSatID ?? null, tenDonVi: job.GiamSat.DonViGiamSat?.TenDonVi ?? job.GiamSat.HoTen }
+        : null,
       kyNangs,
     };
   }

@@ -11,7 +11,6 @@ export type ConversationDto = {
   congViecId: number | null;
   thanhVien1: MemberSummaryDto;
   thanhVien2: MemberSummaryDto;
-  giamSatId: number | null;
   tinNhanCuoi: string | null;
   trangThai: TrangThaiCuocHoiThoai;
   ngayTao: string;
@@ -30,7 +29,6 @@ export type CreateConversationDto = {
   congViecId?: number;
   thanhVien1Id: number;
   thanhVien2Id: number;
-  giamSatId?: number;
 };
 
 export type ConversationMutationResponseDto = {

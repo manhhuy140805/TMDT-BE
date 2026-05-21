@@ -21,7 +21,6 @@ const REVIEW_SELECT = {
   DiemSo: true,
   BinhLuan: true,
   LoaiDanhGia: true,
-  GiamSatID: true,
   NgayTao: true,
 } as const;
 
@@ -107,7 +106,6 @@ export class ReviewsService {
         DiemSo: payload.diemSo,
         BinhLuan: payload.binhLuan,
         LoaiDanhGia: payload.loaiDanhGia,
-        GiamSatID: payload.giamSatId || null,
       },
       select: REVIEW_SELECT,
     });
@@ -131,7 +129,6 @@ export class ReviewsService {
       diemSo: review.DiemSo,
       binhLuan: review.BinhLuan,
       loaiDanhGia: review.LoaiDanhGia,
-      giamSatId: review.GiamSatID,
       ngayTao: review.NgayTao.toISOString(),
     };
   }

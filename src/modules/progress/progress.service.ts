@@ -18,7 +18,7 @@ import type {
 const PROGRESS_SELECT = {
   TienDoID: true,
   CongViecID: true,
-  FreelancerID: true,
+  TaiKhoanID: true,
   TieuDe: true,
   MoTa: true,
   PhanTram: true,
@@ -33,22 +33,11 @@ const PROGRESS_SELECT = {
       GiaThoa: true,
     },
   },
-  Freelancer: {
+  NguoiTao: {
     select: {
-      FreelancerID: true,
-      TaiKhoan: {
-        select: {
-          TaiKhoanID: true,
-          HoTen: true,
-          Email: true,
-        },
-      },
-    },
-  },
-  DonViGiamSat: {
-    select: {
-      GiamSatID: true,
-      TenDonVi: true,
+      TaiKhoanID: true,
+      HoTen: true,
+      Email: true,
     },
   },
 } as const;
@@ -106,7 +95,7 @@ export class ProgressService {
     const progress = await this.prisma.tienDo.create({
       data: {
         CongViecID: payload.congViecId,
-        FreelancerID: payload.freelancerId,
+        TaiKhoanID: payload.freelancerId,
         TieuDe: tieuDe,
         MoTa: payload.moTa?.trim() || null,
         PhanTram: payload.phanTram,
@@ -180,12 +169,12 @@ export class ProgressService {
   }
 
   private async validateFreelancer(freelancerId: number): Promise<void> {
-    const freelancer = await this.prisma.freelancer.findUnique({
-      where: { FreelancerID: freelancerId },
-      select: { FreelancerID: true },
+    const taiKhoan = await this.prisma.taiKhoan.findUnique({
+      where: { TaiKhoanID: freelancerId },
+      select: { TaiKhoanID: true },
     });
 
-    if (!freelancer) {
+    if (!taiKhoan) {
       throw new BadRequestException('Freelancer khong ton tai');
     }
   }
@@ -232,7 +221,7 @@ export class ProgressService {
     return {
       tienDoId: progress.TienDoID,
       congViecId: progress.CongViecID,
-      freelancerId: progress.FreelancerID,
+      freelancerId: progress.TaiKhoanID,
       tieuDe: progress.TieuDe,
       moTa: progress.MoTa,
       phanTram: progress.PhanTram,
@@ -246,17 +235,12 @@ export class ProgressService {
         giaThoa: progress.CongViec.GiaThoa.toString(),
       },
       freelancer: {
-        freelancerId: progress.Freelancer.FreelancerID,
-        taiKhoanId: progress.Freelancer.TaiKhoan.TaiKhoanID,
-        hoTen: progress.Freelancer.TaiKhoan.HoTen,
-        email: progress.Freelancer.TaiKhoan.Email,
+        freelancerId: progress.TaiKhoanID,
+        taiKhoanId: progress.NguoiTao.TaiKhoanID,
+        hoTen: progress.NguoiTao.HoTen,
+        email: progress.NguoiTao.Email,
       },
-      donViGiamSat: progress.DonViGiamSat
-        ? {
-            giamSatId: progress.DonViGiamSat.GiamSatID,
-            tenDonVi: progress.DonViGiamSat.TenDonVi,
-          }
-        : null,
+      donViGiamSat: null,
     };
   }
 

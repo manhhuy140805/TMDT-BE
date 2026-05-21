@@ -18,7 +18,7 @@ import type {
 const PROPOSAL_SELECT = {
   BaoGiaID: true,
   YeuCauID: true,
-  FreelancerID: true,
+  TaiKhoanID: true,
   GiaDeXuat: true,
   ThoiGianThucHien: true,
   NoiDung: true,
@@ -27,15 +27,15 @@ const PROPOSAL_SELECT = {
   NgayCapNhat: true,
   Freelancer: {
     select: {
-      FreelancerID: true,
-      KinhNghiem: true,
-      KyNang: true,
-      XepHang: true,
-      TaiKhoan: {
+      TaiKhoanID: true,
+      HoTen: true,
+      Email: true,
+      Freelancer: {
         select: {
-          TaiKhoanID: true,
-          HoTen: true,
-          Email: true,
+          FreelancerID: true,
+          KinhNghiem: true,
+          KyNang: true,
+          XepHang: true,
         },
       },
       FreelancerKyNangs: {
@@ -54,7 +54,7 @@ const PROPOSAL_SELECT = {
     select: {
       YeuCauID: true,
       TieuDe: true,
-      NguoiThueID: true,
+      TaiKhoanID: true,
     },
   },
 } as const;
@@ -103,7 +103,7 @@ export class ProposalsService {
     await this.validateFreelancer(freelancerId);
 
     const proposals = await this.prisma.baoGia.findMany({
-      where: { FreelancerID: freelancerId },
+      where: { TaiKhoanID: freelancerId },
       select: PROPOSAL_SELECT,
       orderBy: {
         NgayTao: 'desc',
@@ -134,7 +134,7 @@ export class ProposalsService {
     const existing = await this.prisma.baoGia.findFirst({
       where: {
         YeuCauID: payload.yeuCauId,
-        FreelancerID: payload.freelancerId,
+        TaiKhoanID: payload.freelancerId,
       },
       select: { BaoGiaID: true },
     });
@@ -148,7 +148,7 @@ export class ProposalsService {
     const proposal = await this.prisma.baoGia.create({
       data: {
         YeuCauID: payload.yeuCauId,
-        FreelancerID: payload.freelancerId,
+        TaiKhoanID: payload.freelancerId,
         GiaDeXuat: payload.giaDeXuat,
         ThoiGianThucHien: payload.thoiGianThucHien,
         NoiDung: payload.noiDung?.trim() || null,
@@ -237,12 +237,12 @@ export class ProposalsService {
   }
 
   private async validateFreelancer(freelancerId: number): Promise<void> {
-    const freelancer = await this.prisma.freelancer.findUnique({
-      where: { FreelancerID: freelancerId },
-      select: { FreelancerID: true },
+    const taiKhoan = await this.prisma.taiKhoan.findUnique({
+      where: { TaiKhoanID: freelancerId },
+      select: { TaiKhoanID: true },
     });
 
-    if (!freelancer) {
+    if (!taiKhoan) {
       throw new BadRequestException('Freelancer khong ton tai');
     }
   }
@@ -288,7 +288,7 @@ export class ProposalsService {
     return {
       baoGiaId: proposal.BaoGiaID,
       yeuCauId: proposal.YeuCauID,
-      freelancerId: proposal.FreelancerID,
+      freelancerId: proposal.TaiKhoanID,
       giaDeXuat: proposal.GiaDeXuat.toString(),
       thoiGianThucHien: proposal.ThoiGianThucHien,
       noiDung: proposal.NoiDung,
@@ -296,22 +296,22 @@ export class ProposalsService {
       ngayTao: proposal.NgayTao.toISOString(),
       ngayCapNhat: proposal.NgayCapNhat.toISOString(),
       freelancer: {
-        freelancerId: proposal.Freelancer.FreelancerID,
-        taiKhoanId: proposal.Freelancer.TaiKhoan.TaiKhoanID,
-        hoTen: proposal.Freelancer.TaiKhoan.HoTen,
-        email: proposal.Freelancer.TaiKhoan.Email,
-        kinhNghiem: proposal.Freelancer.KinhNghiem,
-        kyNang: proposal.Freelancer.KyNang,
+        freelancerId: proposal.Freelancer.Freelancer?.FreelancerID ?? null,
+        taiKhoanId: proposal.Freelancer.TaiKhoanID,
+        hoTen: proposal.Freelancer.HoTen,
+        email: proposal.Freelancer.Email,
+        kinhNghiem: proposal.Freelancer.Freelancer?.KinhNghiem ?? 0,
+        kyNang: proposal.Freelancer.Freelancer?.KyNang ?? null,
         kyNangs: proposal.Freelancer.FreelancerKyNangs.map((r) => ({
           kyNangId: r.KyNang.KyNangID,
           tenKyNang: r.KyNang.TenKyNang,
         })),
-        xepHang: proposal.Freelancer.XepHang.toString(),
+        xepHang: proposal.Freelancer.Freelancer?.XepHang?.toString() ?? '0',
       },
       yeuCau: {
         yeuCauId: proposal.YeuCau.YeuCauID,
         tieuDe: proposal.YeuCau.TieuDe,
-        nguoiThueId: proposal.YeuCau.NguoiThueID,
+        nguoiThueId: proposal.YeuCau.TaiKhoanID,
       },
     };
   }

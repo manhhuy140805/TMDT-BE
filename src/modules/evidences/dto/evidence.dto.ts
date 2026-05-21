@@ -4,7 +4,6 @@ export type EvidenceDto = {
   bangChungId: number;
   tranhChapId: number;
   nguoiNopId: number;
-  giamSatId: number | null;
   loaiBangChung: LoaiBangChung;
   noiDung: string | null;
   duongDanFile: string | null;
@@ -22,7 +21,6 @@ export type EvidenceResponseDto = {
 
 export type CreateEvidenceDto = {
   nguoiNopId: number;
-  giamSatId?: number;
   loaiBangChung: LoaiBangChung;
   noiDung?: string;
   duongDanFile?: string;

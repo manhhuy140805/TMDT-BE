@@ -17,6 +17,7 @@ export type JobDto = {
   trangThai: TrangThaiYeuCau;
   soLuongBaoGia: number;
   yeuCauGiamSat: boolean;
+  giamSatId: number | null;
   ngayTao: string;
   ngayCapNhat: string;
 };
@@ -31,6 +32,10 @@ export type JobWithDetailsDto = JobDto & {
     loaiDichVuId: number;
     tenLoai: string;
   };
+  giamSat: {
+    giamSatId: number | null;
+    tenDonVi: string;
+  } | null;
   kyNangs: SkillSummaryDto[];
 };
 
@@ -52,7 +57,9 @@ export type CreateJobDto = {
   nganSachMax: number;
   thoiHan: string;
   yeuCauGiamSat?: boolean;
-  /** Danh sách KyNangID yêu cầu (optional) */
+  /** ID don vi giam sat (optional, set yeuCauGiamSat=true automatically) */
+  giamSatId?: number;
+  /** Danh sach KyNangID yeu cau (optional) */
   kyNangIds?: number[];
 };
 
