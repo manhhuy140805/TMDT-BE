@@ -1,4 +1,18 @@
 services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fras-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://admin:123123@postgres:5432/fras_tmdt?schema=public
+    ports:
+      - '8080:8080'
+
   postgres:
     image: postgres:16-alpine
     container_name: fras-postgres
