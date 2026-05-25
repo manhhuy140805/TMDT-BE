@@ -109,6 +109,7 @@ export class ContractsService {
         OR: [
           { NguoiThueID: userId },
           { FreelancerID: userId },
+          { GiamSatID: userId },
         ],
       },
       select: CONTRACT_SELECT,
@@ -136,36 +137,11 @@ export class ContractsService {
   }
 
   async create(
-    payload: CreateContractDto,
+    _payload: CreateContractDto,
   ): Promise<ContractMutationResponseDto> {
-    await this.validateYeuCau(payload.yeuCauId);
-    await this.validateFreelancer(payload.freelancerId);
-    await this.validateNguoiThue(payload.nguoiThueId);
-
-    if (payload.giaThoa <= 0) {
-      throw new BadRequestException('Gia thoa phai lon hon 0');
-    }
-
-    if (payload.thoiGianThoa <= 0) {
-      throw new BadRequestException('Thoi gian thoa phai lon hon 0');
-    }
-
-    const contract = await this.prisma.congViec.create({
-      data: {
-        YeuCauID: payload.yeuCauId,
-        FreelancerID: payload.freelancerId,
-        NguoiThueID: payload.nguoiThueId,
-        GiaThoa: payload.giaThoa,
-        ThoiGianThoa: payload.thoiGianThoa,
-        TrangThai: 'MoiTao',
-      },
-      select: CONTRACT_SELECT,
-    });
-
-    return {
-      message: 'Tao hop dong thanh cong',
-      contract: this.toContractWithDetailsDto(contract),
-    };
+    throw new BadRequestException(
+      'Cong viec chi duoc tao khi chot freelancer qua /contracts/accept-proposal',
+    );
   }
 
   async updateStatus(
@@ -293,8 +269,11 @@ export class ContractsService {
       },
       giamSat: contract.GiamSat
         ? {
-            giamSatId: contract.GiamSat.DonViGiamSat?.GiamSatID ?? null,
-            tenDonVi: contract.GiamSat.DonViGiamSat?.TenDonVi ?? contract.GiamSat.HoTen,
+            giamSatId: contract.GiamSat.TaiKhoanID,
+            taiKhoanId: contract.GiamSat.TaiKhoanID,
+            tenDonVi:
+              contract.GiamSat.DonViGiamSat?.TenDonVi ?? contract.GiamSat.HoTen,
+            email: contract.GiamSat.Email,
           }
         : null,
     };

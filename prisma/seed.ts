@@ -175,11 +175,31 @@ async function upsertProfiles(
 
 async function seedLoaiDichVu() {
   const rows = [
-    { TenLoai: 'Lap trinh web', MoTa: 'Frontend, Backend, Fullstack' },
-    { TenLoai: 'Thiet ke do hoa', MoTa: 'Logo, Banner, UI/UX' },
-    { TenLoai: 'Marketing', MoTa: 'SEO, Social Media, Content' },
-    { TenLoai: 'Phan tich du lieu', MoTa: 'Data Analysis, Machine Learning' },
-    { TenLoai: 'Bien dich', MoTa: 'Dich thuat tai lieu da ngon ngu' },
+    {
+      TenLoai: 'Lap trinh web',
+      MoTa: 'Frontend, Backend, Fullstack',
+      HinhAnh: 'code-xml',
+    },
+    {
+      TenLoai: 'Thiet ke do hoa',
+      MoTa: 'Logo, Banner, UI/UX',
+      HinhAnh: 'palette',
+    },
+    {
+      TenLoai: 'Marketing',
+      MoTa: 'SEO, Social Media, Content',
+      HinhAnh: 'megaphone',
+    },
+    {
+      TenLoai: 'Phan tich du lieu',
+      MoTa: 'Data Analysis, Machine Learning',
+      HinhAnh: 'chart-column-increasing',
+    },
+    {
+      TenLoai: 'Bien dich',
+      MoTa: 'Dich thuat tai lieu da ngon ngu',
+      HinhAnh: 'languages',
+    },
   ];
 
   for (const row of rows) {

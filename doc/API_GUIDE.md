@@ -1,6 +1,6 @@
 # FRAS-TMDT Backend API Guide
 
-**Base URL:** `http://localhost:3000`
+**Base URL:** `http://localhost:8080`
 
 ---
 
@@ -15,7 +15,8 @@ The entire database schema has been refactored. The key changes are:
 3. **Creating a job (YeuCau):** You pass `nguoiThueId` which is the **TaiKhoanID** of the job creator, NOT a NguoiThue table ID.
 4. **Creating a proposal (BaoGia):** You pass `freelancerId` which is the **TaiKhoanID** of the freelancer, NOT a Freelancer table ID.
 5. **Contracts (CongViec):** `freelancerId` and `nguoiThueId` fields ARE TaiKhoanIDs directly.
-6. **Role determination:** The system determines user role by checking `TaiKhoan.VaiTro` field (values: `NguoiThue`, `Freelancer`, `DonViGiamSat`, `Admin`, `KhachVangLai`).
+6. **Supervision:** `giamSatId` in jobs, contracts, disputes, and contract details is the supervisor's **TaiKhoanID**, not `DonViGiamSat.GiamSatID`.
+7. **Role determination:** The system determines user role by checking `TaiKhoan.VaiTro` field (values: `NguoiThue`, `Freelancer`, `DonViGiamSat`, `Admin`, `KhachVangLai`).
 
 ### Migration Summary
 
@@ -25,11 +26,13 @@ The entire database schema has been refactored. The key changes are:
 | `BaoGia.FreelancerID` -> `Freelancer.FreelancerID` | `BaoGia.TaiKhoanID` -> `TaiKhoan.TaiKhoanID` |
 | `CongViec.FreelancerID` -> `Freelancer.FreelancerID` | `CongViec.FreelancerID` -> `TaiKhoan.TaiKhoanID` |
 | `CongViec.NguoiThueID` -> `NguoiThue.NguoiThueID` | `CongViec.NguoiThueID` -> `TaiKhoan.TaiKhoanID` |
+| `CongViec.GiamSatID` -> supervisor profile ID | `CongViec.GiamSatID` -> `TaiKhoan.TaiKhoanID` |
 
 ### What This Means for Frontend
 
 - When calling any API, use the **logged-in user's `taiKhoanId`** as the identifier.
 - No need to look up NguoiThue/Freelancer profile IDs for business operations.
+- Use `giamSat.giamSatId` or `giamSat.taiKhoanId` from contract responses as the supervisor account ID. Both fields return the same `TaiKhoanID`.
 - Profile tables are only needed for displaying extra profile info (company name, experience, etc.).
 
 ---
@@ -289,7 +292,7 @@ Get all jobs created by a user (by TaiKhoanID).
 
 ### GET /users/:id/contracts
 
-Get all contracts for a user (as freelancer or client).
+Get all contracts for a user as client, freelancer, or assigned supervisor. The `id` parameter is `TaiKhoanID`.
 
 **Response:** Same format as GET /contracts.
 
@@ -297,7 +300,7 @@ Get all contracts for a user (as freelancer or client).
 
 ### GET /users/:id/conversations
 
-Get all chat conversations for a user.
+Get all chat conversations for a user. An accepted supervisor also receives conversations linked to contracts they supervise.
 
 **Response:** Same format as conversation list.
 
@@ -317,7 +320,7 @@ Update user information.
 | soDienThoai | Optional | Phone number |
 | gioiTinh | Optional | Gender: `Nam`, `Nu`, `Khac` |
 | diaChi | Optional | Address |
-| trangThai | Optional | Status: `HoatDong`, `Khoa` |
+| trangThai | Optional | Status: `HoatDong`, `BiKhoa`, `ChoDuyet`, `DaBi` |
 
 **Response (200):**
 
@@ -344,7 +347,7 @@ Soft-delete (ban) a user account.
 {
   "message": "Xoa tai khoan thanh cong",
   "userId": 1,
-  "trangThai": "Khoa"
+  "trangThai": "BiKhoa"
 }
 ```
 
@@ -354,6 +357,19 @@ Soft-delete (ban) a user account.
 ---
 
 ## 3. Jobs
+
+`YeuCau` represents a hiring request, while `CongViec` represents the work created after a freelancer is selected.
+
+### Hiring Request Lifecycle
+
+| Status | Meaning | How it is reached |
+|---|---|---|
+| `DangNhanHoSo` | The request accepts new freelancer proposals | Set automatically by `POST /jobs` |
+| `DaDong` | No new proposals are accepted; existing proposals can still be selected | `PUT /jobs/:id` with `{ "trangThai": "DaDong" }` |
+| `DaChot` | A freelancer is selected and a corresponding `CongViec` has been created | Set automatically by `POST /contracts/accept-proposal` |
+| `DaHuy` | The hiring request is cancelled | `DELETE /jobs/:id` or `PUT /jobs/:id` with `{ "trangThai": "DaHuy" }` |
+
+Allowed manual transitions are `DangNhanHoSo -> DaDong`, `DangNhanHoSo -> DaHuy`, and `DaDong -> DaHuy`. The `DaChot` state cannot be set directly from the jobs API.
 
 ### GET /jobs
 
@@ -374,7 +390,7 @@ Get all jobs.
       "nganSachMin": "5000000",
       "nganSachMax": "10000000",
       "thoiHan": "2025-03-01T00:00:00.000Z",
-      "trangThai": "DangMo",
+      "trangThai": "DangNhanHoSo",
       "soLuongBaoGia": 3,
       "yeuCauGiamSat": false,
       "giamSatId": null,
@@ -463,7 +479,7 @@ Get skills required for a job.
 
 ### POST /jobs
 
-Create a new job. **IMPORTANT: `nguoiThueId` is the TaiKhoanID of the creator.**
+Create a new hiring request in status `DangNhanHoSo`. **IMPORTANT: `nguoiThueId` is the TaiKhoanID of the creator.**
 
 **Request Body:**
 
@@ -508,7 +524,7 @@ Update a job.
 | nganSachMin | Optional | Minimum budget |
 | nganSachMax | Optional | Maximum budget |
 | thoiHan | Optional | Deadline (ISO date string) |
-| trangThai | Optional | Status: `MoDau`, `DangMo`, `DaDong`, `DaHuy`, `HoanThanh` |
+| trangThai | Optional | Status: `DangNhanHoSo`, `DaDong`, `DaHuy`. `DaChot` is set only by accepting a proposal. |
 | yeuCauGiamSat | Optional | Whether supervision is required |
 
 **Response (200):**
@@ -521,7 +537,7 @@ Update a job.
 ```
 
 **Error Codes:**
-- `400` - No valid fields / Invalid status / Budget validation
+- `400` - No valid fields / Invalid status or status transition / Budget validation
 - `404` - Job not found
 
 ---
@@ -585,7 +601,7 @@ Remove a single skill from a job.
 
 ### DELETE /jobs/:id
 
-Soft-delete a job (sets status to `DaHuy`).
+Cancel a hiring request (sets status to `DaHuy`). Requests already in `DaChot` cannot be cancelled through this endpoint.
 
 **Response (200):**
 
@@ -597,6 +613,7 @@ Soft-delete a job (sets status to `DaHuy`).
 ```
 
 **Error Codes:**
+- `400` - Request has already been finalized or cancelled
 - `404` - Job not found
 
 ---
@@ -649,7 +666,7 @@ Get a single proposal by ID.
 
 ### POST /proposals
 
-Create a new proposal. **IMPORTANT: `freelancerId` is the TaiKhoanID of the freelancer.**
+Create a new proposal. This endpoint only accepts proposals while the hiring request is in `DangNhanHoSo`. **IMPORTANT: `freelancerId` is the TaiKhoanID of the freelancer.**
 
 **Request Body:**
 
@@ -671,7 +688,7 @@ Create a new proposal. **IMPORTANT: `freelancerId` is the TaiKhoanID of the free
 ```
 
 **Error Codes:**
-- `400` - Invalid input / Job not found / Freelancer not found / Already submitted
+- `400` - Invalid input / Job not found / Request is not accepting proposals / Freelancer not found / Already submitted
 - `404` - Job not found
 
 ---
@@ -687,7 +704,7 @@ Update a proposal.
 | giaDeXuat | Optional | Updated price |
 | thoiGianThucHien | Optional | Updated timeline (days) |
 | noiDung | Optional | Updated description |
-| trangThai | Optional | Status: `DaGui`, `DuocChon`, `TuChoi`, `RutLai` |
+| trangThai | Optional | Status: `DaGui`, `DuocChon`, `TuChoi`, `HetHan` |
 
 **Response (200):**
 
@@ -728,50 +745,55 @@ Delete a proposal.
 
 Get all contracts.
 
-**Response (200):**
+**Response (200) - Example contract payload:**
 
 ```json
 {
-  "total": 2,
+  "total": 1,
   "contracts": [
     {
       "congViecId": 1,
       "yeuCauId": 1,
-      "freelancerId": 2,
+      "freelancerId": 13,
       "nguoiThueId": 1,
-      "giaThoa": "7000000",
+      "giaThoa": "32000000",
       "thoiGianThoa": 30,
       "trangThai": "DangThucHien",
-      "ngayBatDau": "2025-01-20T00:00:00.000Z",
+      "ngayBatDau": "2026-05-02T09:00:00.000Z",
       "ngayKetThuc": null,
-      "giamSatId": null,
-      "trangThaiGiamSat": "KhongCo",
-      "phiGiamSat": "0",
-      "ngayTao": "2025-01-20T00:00:00.000Z",
+      "giamSatId": 21,
+      "trangThaiGiamSat": "DangGiamSat",
+      "phiGiamSat": "450000",
+      "ngayTao": "2026-05-02T08:30:00.000Z",
       "yeuCau": {
         "yeuCauId": 1,
-        "tieuDe": "Build a React website",
-        "moTa": "Need a responsive website..."
+        "tieuDe": "Xây dựng API NestJS",
+        "moTa": "Cần xây dựng hệ thống API RESTful quản lý đơn hàng và thanh toán."
       },
       "freelancer": {
-        "freelancerId": 2,
-        "taiKhoanId": 2,
-        "hoTen": "Tran Van B",
-        "email": "tranvanb@email.com"
+        "freelancerId": 13,
+        "taiKhoanId": 13,
+        "hoTen": "User 13",
+        "email": "dev1@freelancer.vn"
       },
       "nguoiThue": {
         "nguoiThueId": 1,
         "taiKhoanId": 1,
-        "hoTen": "Nguyen Van A",
-        "email": "nguyenvana@email.com"
+        "hoTen": "Nguyen Van An",
+        "email": "manhhuy2@gmail.com"
       },
-      "giamSat": null
+      "giamSat": {
+        "giamSatId": 21,
+        "taiKhoanId": 21,
+        "tenDonVi": "ISO Quality Control",
+        "email": "iso@giamsat.vn"
+      }
     }
   ]
 }
 ```
 
-**Note:** `freelancerId` and `nguoiThueId` in the contract ARE TaiKhoanIDs.
+**Identifier Note:** `freelancerId`, `nguoiThueId`, top-level `giamSatId`, and `giamSat.giamSatId` are all `TaiKhoanID` values. For backward-friendly frontend mapping, `giamSat.taiKhoanId` is also returned and equals `giamSat.giamSatId`.
 
 ---
 
@@ -790,7 +812,7 @@ Get a single contract.
 
 Get contract with full details (same as GET /contracts/:id but may include more nested data).
 
-**Response:** Same format as GET /contracts/:id.
+**Response:** Same format as GET /contracts/:id. The nested `giamSat` object includes `giamSatId`, `taiKhoanId`, `tenDonVi`, and `email`.
 
 ---
 
@@ -806,35 +828,18 @@ Get all progress reports for a contract.
 
 Get all chat conversations for a contract.
 
+When a contract has an accepted supervisor (`trangThaiGiamSat` is `DangGiamSat` or `HoanThanh`), that supervisor can access and send messages in the contract conversations through their `TaiKhoanID`.
+
 **Response:** Same format as conversation list.
 
 ---
 
 ### POST /contracts
 
-Create a contract manually.
-
-**Request Body:**
-
-| Field | Required | Description |
-|---|---|---|
-| yeuCauId | Yes | Job ID |
-| freelancerId | Yes | Freelancer's **TaiKhoanID** |
-| nguoiThueId | Yes | Client's **TaiKhoanID** |
-| giaThoa | Yes | Agreed price |
-| thoiGianThoa | Yes | Agreed timeline (days) |
-
-**Response (201):**
-
-```json
-{
-  "message": "Tao hop dong thanh cong",
-  "contract": { "...": "full contract object" }
-}
-```
+Direct contract creation is disabled. Use `POST /contracts/accept-proposal` to finalize a freelancer and create the corresponding contract atomically.
 
 **Error Codes:**
-- `400` - Invalid input / Users not found
+- `400` - Contracts must be created by accepting a proposal
 
 ---
 
@@ -846,7 +851,7 @@ Update contract status.
 
 | Field | Required | Description |
 |---|---|---|
-| trangThai | Yes | Status: `ChoXacNhan`, `DangThucHien`, `HoanThanh`, `DaHuy`, `TranhChap` |
+| trangThai | Yes | Status: `MoiTao`, `DangThucHien`, `HoanThanh`, `DaHuy`, `TranhChap` |
 
 **Response (200):**
 
@@ -898,9 +903,9 @@ Supervisor accepts the supervision request.
 
 ```json
 {
-  "message": "Giam sat da chap nhan",
+  "message": "Chap nhan don vi giam sat thanh cong",
   "yeuCauGiamSatId": 1,
-  "trangThai": "DaDuyet"
+  "trangThai": "DaChapNhan"
 }
 ```
 
@@ -924,11 +929,11 @@ Supervisor rejects the supervision request.
 
 ## 6. Contract Flow
 
-This section describes the complete flow from accepting a proposal to completing a contract with escrow payment.
+This section describes the complete flow from finalizing a freelancer proposal to completing a contract with escrow payment.
 
 ### Flow Overview
 
-1. **Client accepts proposal** -> Contract created + Escrow payment held
+1. **Client accepts proposal** -> Hiring request becomes `DaChot`, contract created, escrow payment held
 2. **Work is done** -> Progress reports submitted
 3. **Confirm completion** -> Each party confirms (Freelancer -> Supervisor -> Client)
 4. **All confirmed** -> Escrow released (Freelancer gets 95%, System takes 5% fee)
@@ -937,14 +942,16 @@ This section describes the complete flow from accepting a proposal to completing
 
 ### POST /contracts/accept-proposal
 
-Accept a proposal and create a contract with escrow payment.
+Accept a proposal from a hiring request in `DangNhanHoSo` or `DaDong`, finalize the freelancer selection, and create a contract with escrow payment.
 
 **What happens internally:**
 1. Creates a contract (CongViec) with status `DangThucHien`
 2. Creates an escrow payment (100% agreed price + supervisor fee)
-3. Updates the accepted proposal status to `DuocChon`
-4. Rejects all other proposals for the same job (`TuChoi`)
-5. Closes the job (status -> `DaDong`)
+3. Creates the contract conversation between the client and selected freelancer
+4. Creates a pending supervision request when `giamSatId` is provided
+5. Updates the accepted proposal status to `DuocChon`
+6. Rejects all other proposals for the same job (`TuChoi`)
+7. Finalizes the hiring request (status -> `DaChot`)
 
 **Request Body:**
 
@@ -952,7 +959,7 @@ Accept a proposal and create a contract with escrow payment.
 |---|---|---|
 | baoGiaId | Yes | Proposal ID to accept |
 | nguoiThueId | Yes | Client's **TaiKhoanID** (must own the job) |
-| giamSatId | Optional | Supervisor's TaiKhoanID (if supervision needed) |
+| giamSatId | Optional | Supervisor's **TaiKhoanID** (for example, `21`; not the profile `GiamSatID`) |
 | phiGiamSat | Optional | Supervisor fee (default: 0) |
 
 **Response (200):**
@@ -971,7 +978,7 @@ Accept a proposal and create a contract with escrow payment.
 ```
 
 **Error Codes:**
-- `400` - Proposal already processed / User doesn't own the job / Invalid user
+- `400` - Proposal already processed / User doesn't own the job / Request already finalized or cancelled / Invalid user
 - `404` - Proposal not found
 
 ---
@@ -1028,7 +1035,7 @@ Confirm contract completion (called by each party separately).
 - Supervisor receives: `phiGiamSat` (full amount)
 - System fee: `giaThoa * 5%`
 - Contract status changes to `HoanThanh`
-- Job status changes to `HoanThanh`
+- Hiring request remains `DaChot`; completion belongs to the contract lifecycle
 
 **Error Codes:**
 - `400` - Wrong role/userId / Already confirmed / Prerequisites not met / No escrow
@@ -1055,7 +1062,7 @@ Get a single progress report.
     "phanTram": 30,
     "tepDinhKem": "https://example.com/file.pdf",
     "xacNhanBoi": null,
-    "trangThaiXacNhan": "ChoXacNhan",
+    "trangThaiXacNhan": "ChuaXacNhan",
     "ngayTao": "2025-01-25T00:00:00.000Z",
     "congViec": {
       "congViecId": 1,
@@ -1119,7 +1126,7 @@ Update a progress report.
 | moTa | Optional | Description |
 | phanTram | Optional | Percentage (0-100) |
 | tepDinhKem | Optional | Attachment URL |
-| trangThaiXacNhan | Optional | Status: `ChoXacNhan`, `DaXacNhan`, `TuChoi` |
+| trangThaiXacNhan | Optional | Status: `ChuaXacNhan`, `DaXacNhan`, `TuChoi` |
 
 **Response (200):**
 
@@ -1324,14 +1331,16 @@ Delete a skill.
 
 Get all service categories.
 
+`hinhAnh` stores a simple professional icon key for the frontend icon set (for example, Lucide icons), not an image file URL. Seed examples include `palette`, `server-cog`, `megaphone`, `smartphone`, and `shield-check`.
+
 **Response (200):**
 
 ```json
 {
   "total": 5,
   "categories": [
-    { "loaiDichVuId": 1, "tenLoai": "Web Development", "moTa": "Website building" },
-    { "loaiDichVuId": 2, "tenLoai": "Mobile App", "moTa": "iOS and Android apps" }
+    { "loaiDichVuId": 1, "tenLoai": "Thiet ke UI/UX", "moTa": "Thiet ke giao dien web va mobile", "hinhAnh": "palette" },
+    { "loaiDichVuId": 2, "tenLoai": "Lap trinh backend", "moTa": "Phat trien API, he thong nghiep vu", "hinhAnh": "server-cog" }
   ]
 }
 ```
@@ -1346,7 +1355,7 @@ Get a single category.
 
 ```json
 {
-  "category": { "loaiDichVuId": 1, "tenLoai": "Web Development", "moTa": "Website building" }
+  "category": { "loaiDichVuId": 1, "tenLoai": "Thiet ke UI/UX", "moTa": "Thiet ke giao dien web va mobile", "hinhAnh": "palette" }
 }
 ```
 
@@ -1365,13 +1374,14 @@ Create a new category.
 |---|---|---|
 | tenLoai | Yes | Category name |
 | moTa | Optional | Description |
+| hinhAnh | Optional | Frontend icon key, e.g. `brain-circuit` |
 
 **Response (201):**
 
 ```json
 {
   "message": "Tao loai dich vu thanh cong",
-  "category": { "loaiDichVuId": 6, "tenLoai": "AI/ML", "moTa": "Machine learning services" }
+  "category": { "loaiDichVuId": 6, "tenLoai": "AI/ML", "moTa": "Machine learning services", "hinhAnh": "brain-circuit" }
 }
 ```
 
@@ -1390,13 +1400,14 @@ Update a category.
 |---|---|---|
 | tenLoai | Optional | Category name |
 | moTa | Optional | Description |
+| hinhAnh | Optional | Frontend icon key, e.g. `panels-top-left` |
 
 **Response (200):**
 
 ```json
 {
   "message": "Cap nhat loai dich vu thanh cong",
-  "category": { "loaiDichVuId": 1, "tenLoai": "Full-Stack Web", "moTa": "Updated" }
+  "category": { "loaiDichVuId": 1, "tenLoai": "Full-Stack Web", "moTa": "Updated", "hinhAnh": "code-xml" }
 }
 ```
 
@@ -1425,6 +1436,8 @@ Delete a category.
 
 ## 11. Supervisors
 
+This section exposes supervisor **profiles**. Here, `giamSatId` is `DonViGiamSat.GiamSatID`, while `taiKhoanId` is the supervisor account ID. Use `taiKhoanId` when assigning supervision or calling contract/dispute business endpoints.
+
 ### GET /supervisors
 
 Get all supervisors.
@@ -1433,25 +1446,25 @@ Get all supervisors.
 
 ```json
 {
-  "total": 2,
+  "total": 9,
   "supervisors": [
     {
-      "giamSatId": 1,
-      "taiKhoanId": 5,
-      "tenDonVi": "QA Solutions",
-      "moTa": "Professional QA services",
-      "nangLuc": "Software testing, Code review",
-      "chungChi": "ISTQB Certified",
-      "phiGiamSat": "500000",
-      "xepHang": "4.5",
-      "tongCongViecGS": 10,
+      "giamSatId": 2,
+      "taiKhoanId": 21,
+      "tenDonVi": "ISO Quality Control",
+      "moTa": "Giam sat chat luong ISO",
+      "nangLuc": "Kiem thu, bao cao, ISO",
+      "chungChi": "ISO-CERT",
+      "phiGiamSat": "450000",
+      "xepHang": "4.50",
+      "tongCongViecGS": 35,
       "trangThai": "HoatDong",
-      "ngayDangKy": "2025-01-01T00:00:00.000Z",
+      "ngayDangKy": "2026-04-11T09:00:00.000Z",
       "taiKhoan": {
-        "taiKhoanId": 5,
-        "hoTen": "Le Van E",
-        "email": "levane@email.com",
-        "soDienThoai": "0905555555"
+        "taiKhoanId": 21,
+        "hoTen": "User 21",
+        "email": "iso@giamsat.vn",
+        "soDienThoai": "0901000021"
       }
     }
   ]
@@ -1476,7 +1489,7 @@ Search supervisors by keyword.
 
 ### GET /supervisors/:id
 
-Get a single supervisor.
+Get a single supervisor profile. The `id` URL parameter is `DonViGiamSat.GiamSatID`, not `TaiKhoanID`.
 
 **Response (200):**
 
@@ -1522,7 +1535,7 @@ Create/register a supervisor profile.
 
 ### PUT /supervisors/:id
 
-Update supervisor profile.
+Update supervisor profile. The `id` URL parameter is `DonViGiamSat.GiamSatID`.
 
 **Request Body:**
 
@@ -1533,7 +1546,7 @@ Update supervisor profile.
 | nangLuc | Optional | Capabilities |
 | chungChi | Optional | Certifications |
 | phiGiamSat | Optional | Fee |
-| trangThai | Optional | Status: `HoatDong`, `TamNgung`, `ChoDuyet` |
+| trangThai | Optional | Status: `HoatDong`, `TamNghi`, `BiKhoa`, `ChoDuyet` |
 
 **Response (200):**
 
@@ -1551,7 +1564,7 @@ Update supervisor profile.
 
 ### DELETE /supervisors/:id
 
-Delete a supervisor profile.
+Delete a supervisor profile. The `id` URL parameter is `DonViGiamSat.GiamSatID`.
 
 **Response (200):**
 
@@ -1573,6 +1586,8 @@ Delete a supervisor profile.
 
 Create a new conversation.
 
+A contract conversation stores the client and freelancer as its two primary members. An accepted supervisor is linked through the associated contract and is returned in `giamSat`; a separate conversation does not need to be created for supervision.
+
 **Request Body:**
 
 | Field | Required | Description |
@@ -1591,17 +1606,22 @@ Create a new conversation.
     "congViecId": 1,
     "thanhVien1": {
       "taiKhoanId": 1,
-      "hoTen": "Nguyen Van A",
-      "email": "nguyenvana@email.com"
+      "hoTen": "Nguyen Van An",
+      "email": "manhhuy2@gmail.com"
     },
     "thanhVien2": {
-      "taiKhoanId": 2,
-      "hoTen": "Tran Van B",
-      "email": "tranvanb@email.com"
+      "taiKhoanId": 13,
+      "hoTen": "Freelancer",
+      "email": "dev1@freelancer.vn"
     },
-    "tinNhanCuoi": null,
-    "trangThai": "MoiTao",
-    "ngayTao": "2025-01-20T00:00:00.000Z"
+    "giamSat": {
+      "taiKhoanId": 21,
+      "hoTen": "User 21",
+      "email": "iso@giamsat.vn"
+    },
+    "tinNhanCuoi": "2026-05-20T10:10:00.000Z",
+    "trangThai": "DangMo",
+    "ngayTao": "2026-05-02T10:00:00.000Z"
   }
 }
 ```
@@ -1651,20 +1671,20 @@ Get all messages in a conversation.
 
 ```json
 {
-  "total": 5,
+  "total": 6,
   "messages": [
     {
       "tinNhanId": 1,
       "cuocHoiThoaiId": 1,
       "nguoiGui": {
         "taiKhoanId": 1,
-        "hoTen": "Nguyen Van A",
-        "email": "nguyenvana@email.com"
+        "hoTen": "Nguyen Van An",
+        "email": "manhhuy2@gmail.com"
       },
-      "noiDung": "Hello, I want to discuss the project",
+      "noiDung": "Minh gui lai yeu cau API va deadline sprint dau.",
       "loaiTin": "VanBan",
       "daDoc": true,
-      "ngayTao": "2025-01-20T10:00:00.000Z"
+      "ngayTao": "2026-05-02T10:01:00.000Z"
     }
   ]
 }
@@ -1682,7 +1702,7 @@ Send a message in a conversation.
 |---|---|---|
 | nguoiGuiId | Yes | Sender's **TaiKhoanID** |
 | noiDung | Yes | Message content |
-| loaiTin | Optional | Message type: `VanBan`, `HinhAnh`, `TepTin` (default: `VanBan`) |
+| loaiTin | Optional | Message type: `VanBan`, `File`, `HinhAnh` (default: `VanBan`) |
 
 **Note:** `cuocHoiThoaiId` is taken from the URL parameter.
 
@@ -1695,20 +1715,20 @@ Send a message in a conversation.
     "tinNhanId": 6,
     "cuocHoiThoaiId": 1,
     "nguoiGui": {
-      "taiKhoanId": 1,
-      "hoTen": "Nguyen Van A",
-      "email": "nguyenvana@email.com"
+      "taiKhoanId": 21,
+      "hoTen": "User 21",
+      "email": "iso@giamsat.vn"
     },
-    "noiDung": "Hello!",
+    "noiDung": "Toi da xac nhan moc API va se theo doi sprint tiep theo.",
     "loaiTin": "VanBan",
     "daDoc": false,
-    "ngayTao": "2025-01-20T10:05:00.000Z"
+    "ngayTao": "2026-05-20T10:10:00.000Z"
   }
 }
 ```
 
 **Error Codes:**
-- `400` - Empty content / Sender not in conversation
+- `400` - Empty content / Sender is not a primary member or accepted supervisor of the contract conversation
 - `404` - Conversation not found
 
 ---
@@ -1716,6 +1736,8 @@ Send a message in a conversation.
 ### PUT /chat/:id/read/:userId
 
 Mark all messages as read for a user in a conversation.
+
+Primary members and the accepted supervisor of the associated contract may mark messages as read.
 
 **Response (200):**
 
@@ -1736,12 +1758,12 @@ The chat system also supports real-time messaging via WebSocket using Socket.IO.
 
 **Namespace:** `/chat`
 
-**Connection URL:** `ws://localhost:3000/chat?userId=<TaiKhoanID>`
+**Connection URL:** `ws://localhost:8080/chat?userId=<TaiKhoanID>`
 
 ```javascript
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:3000/chat', {
+const socket = io('http://localhost:8080/chat', {
   query: { userId: '1' }  // Your TaiKhoanID
 });
 ```
@@ -1900,18 +1922,20 @@ Get recommended freelancers for a specific job (based on skill matching).
 
 Get recommended supervisors (active, sorted by rating).
 
+The returned `giamSatId` identifies the supervisor profile; use `taiKhoanId` when selecting the supervisor for a request or contract.
+
 **Response (200):**
 
 ```json
 {
   "recommendations": [
     {
-      "giamSatId": 1,
-      "taiKhoanId": 5,
-      "tenDonVi": "QA Solutions",
-      "phiGiamSat": "500000",
-      "xepHang": "4.5",
-      "tongCongViecGS": 10,
+      "giamSatId": 2,
+      "taiKhoanId": 21,
+      "tenDonVi": "ISO Quality Control",
+      "phiGiamSat": "450000",
+      "xepHang": "4.50",
+      "tongCongViecGS": 35,
       "trangThai": "HoatDong"
     }
   ]
@@ -1932,7 +1956,7 @@ Create an escrow deposit payment for a contract.
 |---|---|---|
 | contractId | Yes | Contract ID (CongViecID) |
 | amount | Yes | Deposit amount |
-| paymentMethod | Yes | Method: `Vi`, `NganHang`, `MoMo`, `VNPay` |
+| paymentMethod | Yes | Method: `ChuyenKhoan`, `ThanhToanQuaMang`, `Vi`, `TienMat` |
 | note | Optional | Payment note |
 
 **Response (201):**
@@ -2060,7 +2084,7 @@ Create a dispute for a contract.
     "giamSatId": null,
     "lyDo": "Work not delivered on time",
     "moTa": "Freelancer missed the deadline by 2 weeks",
-    "trangThai": "DangMo",
+    "trangThai": "MoiMo",
     "yeuCauHoanTien": "3000000",
     "ngayMo": "2025-02-15T00:00:00.000Z",
     "ngayDong": null
@@ -2121,7 +2145,7 @@ Assign a supervisor to review the dispute.
 ```json
 {
   "message": "Giam sat da nhan xem xet tranh chap",
-  "dispute": { "...": "dispute with giamSatId set, trangThai: DangXemXet" }
+  "dispute": { "...": "dispute with giamSatId set, trangThai: DangXuLy" }
 }
 ```
 
@@ -2140,17 +2164,17 @@ Resolve a dispute (by supervisor).
 | Field | Required | Description |
 |---|---|---|
 | giamSatId | Yes | Supervisor's **TaiKhoanID** (must be assigned reviewer) |
-| ketQua | Yes | Result: `HoanTienDayDu`, `HoanTienMotPhan`, `KhongHoanTien` |
+| ketQua | Yes | Result: `TiepTuc`, `HoanTienNguoiThue`, `HuyHopDong`, `PhanChia` |
 | lyDo | Yes | Resolution reason |
 | soTienHoan | Yes | Refund amount |
-| benChiuPhi | Yes | Who pays fees: `NguoiThue`, `Freelancer`, `ChiaDeu` |
+| benChiuPhi | Yes | Who pays fees: `NguoiThue`, `Freelancer`, `ChiaSe`, `HeThong` |
 
 **Response (200):**
 
 ```json
 {
   "message": "Giai quyet tranh chap thanh cong",
-  "dispute": { "...": "dispute with trangThai: DaGiaiQuyet, ngayDong set" }
+  "dispute": { "...": "dispute with trangThai: DaKetLuan, ngayDong set" }
 }
 ```
 
@@ -2171,7 +2195,7 @@ Submit evidence for a dispute.
 | Field | Required | Description |
 |---|---|---|
 | nguoiNopId | Yes | Submitter's **TaiKhoanID** |
-| loaiBangChung | Yes | Type: `VanBan`, `HinhAnh`, `Video`, `TepTin`, `Khac` |
+| loaiBangChung | Yes | Type: `TinNhan`, `File`, `HinhAnh`, `GhiChu`, `KhacP` |
 | noiDung | Optional | Text content/description |
 | duongDanFile | Optional | File URL |
 
@@ -2246,7 +2270,7 @@ Create a review for a completed contract.
 | nguoiDuocDGId | Yes | Reviewed person's **TaiKhoanID** |
 | diemSo | Yes | Rating score (1-5) |
 | binhLuan | Optional | Review comment |
-| loaiDanhGia | Yes | Type: `NguoiThue_DanhGia_Freelancer`, `Freelancer_DanhGia_NguoiThue`, `GiamSat_DanhGia` |
+| loaiDanhGia | Yes | Type: `NguoiThue_DanhGia_Freelancer`, `Freelancer_DanhGia_NguoiThue`, `NguoiThue_DanhGia_GiamSat`, `Freelancer_DanhGia_GiamSat`, `GiamSat_DanhGia_Freelancer`, `GiamSat_DanhGia_NguoiThue` |
 
 **Response (201):**
 
@@ -2335,7 +2359,7 @@ Get all notifications for a user.
       "taiKhoanId": 1,
       "tieuDe": "New proposal received",
       "noiDung": "You have a new proposal for your job",
-      "loaiThongBao": "BaoGiaMoi",
+      "loaiThongBao": "BaoGia",
       "daDoc": false,
       "ngayTao": "2025-01-16T00:00:00.000Z"
     }
@@ -2444,7 +2468,7 @@ Resolve a report (admin action).
 | Field | Required | Description |
 |---|---|---|
 | adminId | Yes | Admin's **TaiKhoanID** |
-| trangThai | Yes | Status: `DaXuLy`, `TuChoi` |
+| trangThai | Yes | Status: `DangXuLy`, `DaXuLy`, `HuyBo` |
 | ketQua | Yes | Resolution result description |
 
 **Response (200):**
@@ -2580,23 +2604,24 @@ Get platform statistics.
 
 ### Account Status (TrangThaiTaiKhoan)
 - `HoatDong` - Active
-- `Khoa` - Banned/Locked
+- `BiKhoa` - Locked
+- `ChoDuyet` - Pending approval
+- `DaBi` - Deleted/disabled
 
 ### Job Status (TrangThaiYeuCau)
-- `MoDau` - Draft
-- `DangMo` - Open (accepting proposals)
-- `DaDong` - Closed (contract created)
+- `DangNhanHoSo` - Accepting freelancer proposals
+- `DaDong` - Closed to new proposals; received proposals may still be selected
+- `DaChot` - Freelancer selected and contract created
 - `DaHuy` - Cancelled
-- `HoanThanh` - Completed
 
 ### Proposal Status (TrangThaiBaoGia)
 - `DaGui` - Submitted
 - `DuocChon` - Accepted/Selected
 - `TuChoi` - Rejected
-- `RutLai` - Withdrawn
+- `HetHan` - Expired
 
 ### Contract Status (TrangThaiCongViec)
-- `ChoXacNhan` - Pending confirmation
+- `MoiTao` - Newly created
 - `DangThucHien` - In progress
 - `HoanThanh` - Completed
 - `DaHuy` - Cancelled
@@ -2605,8 +2630,15 @@ Get platform statistics.
 ### Supervisor Status (TrangThaiGiamSatCongViec)
 - `KhongCo` - No supervisor
 - `ChoDuyet` - Pending approval
-- `DaDuyet` - Approved
+- `DangGiamSat` - Supervising
+- `HoanThanh` - Supervision completed
 - `TuChoi` - Rejected
+
+### Supervisor Request Status (TrangThaiYeuCauGiamSat)
+- `ChoDuyet` - Pending approval
+- `DaChapNhan` - Accepted
+- `TuChoi` - Rejected
+- `HoanThanh` - Completed
 
 ### Payment Type (LoaiThanhToan)
 - `DatCoc` - Escrow deposit
@@ -2616,10 +2648,10 @@ Get platform statistics.
 - `HoanTien` - Refund
 
 ### Payment Method (PhuongThucThanhToan)
+- `ChuyenKhoan` - Bank transfer
+- `ThanhToanQuaMang` - Online payment
 - `Vi` - Wallet
-- `NganHang` - Bank transfer
-- `MoMo` - MoMo
-- `VNPay` - VNPay
+- `TienMat` - Cash
 
 ### Payment Status (TrangThaiThanhToan)
 - `ChoXuLy` - Pending
@@ -2628,32 +2660,42 @@ Get platform statistics.
 - `DaHoan` - Refunded
 
 ### Dispute Status (TrangThaiTranhChap)
-- `DangMo` - Open
-- `DangXemXet` - Under review
-- `DaGiaiQuyet` - Resolved
+- `MoiMo` - Newly opened
+- `DangXuLy` - In progress
+- `DaKetLuan` - Concluded
 - `DaDong` - Closed
 
 ### Dispute Result (KetQuaTranhChap)
-- `HoanTienDayDu` - Full refund
-- `HoanTienMotPhan` - Partial refund
-- `KhongHoanTien` - No refund
+- `TiepTuc` - Continue the contract
+- `HoanTienNguoiThue` - Refund the client
+- `HuyHopDong` - Cancel the contract
+- `PhanChia` - Split settlement
+
+### Dispute Fee Bearer (BenChiuPhiKetLuan)
+- `NguoiThue` - Client pays the fees
+- `Freelancer` - Freelancer pays the fees
+- `ChiaSe` - Fees are shared
+- `HeThong` - Platform pays the fees
 
 ### Evidence Type (LoaiBangChung)
-- `VanBan` - Text
+- `TinNhan` - Message
+- `File` - File
 - `HinhAnh` - Image
-- `Video` - Video
-- `TepTin` - File
-- `Khac` - Other
+- `GhiChu` - Note
+- `KhacP` - Other
 
 ### Review Type (LoaiDanhGia)
 - `NguoiThue_DanhGia_Freelancer` - Client reviews Freelancer
 - `Freelancer_DanhGia_NguoiThue` - Freelancer reviews Client
-- `GiamSat_DanhGia` - Supervisor review
+- `NguoiThue_DanhGia_GiamSat` - Client reviews Supervisor
+- `Freelancer_DanhGia_GiamSat` - Freelancer reviews Supervisor
+- `GiamSat_DanhGia_Freelancer` - Supervisor reviews Freelancer
+- `GiamSat_DanhGia_NguoiThue` - Supervisor reviews Client
 
 ### Message Type (LoaiTinNhan)
 - `VanBan` - Text
+- `File` - File
 - `HinhAnh` - Image
-- `TepTin` - File
 
 ### Gender (GioiTinh)
 - `Nam` - Male
@@ -2662,25 +2704,28 @@ Get platform statistics.
 
 ### Supervisor Organization Status (TrangThaiDonViGiamSat)
 - `HoatDong` - Active
-- `TamNgung` - Suspended
+- `TamNghi` - Paused
+- `BiKhoa` - Locked
 - `ChoDuyet` - Pending approval
 
 ### Notification Type (LoaiThongBao)
-- `BaoGiaMoi` - New proposal
-- `BaoGiaDuocChon` - Proposal accepted
-- `HopDongMoi` - New contract
-- `TienDoMoi` - New progress report
-- `TranhChapMoi` - New dispute
-- `ThanhToanMoi` - New payment
 - `HeThong` - System notification
+- `YeuCau` - Hiring request notification
+- `BaoGia` - Proposal notification
+- `CongViec` - Contract notification
+- `TranhChap` - Dispute notification
+- `GiamSat` - Supervisor notification
+- `ThanhToan` - Payment notification
+- `DanhGia` - Review notification
 
 ### Report Status (TrangThaiBaoCao)
 - `ChoXuLy` - Pending
+- `DangXuLy` - In progress
 - `DaXuLy` - Processed
-- `TuChoi` - Rejected
+- `HuyBo` - Cancelled
 
 ### Progress Confirmation Status (TrangThaiXacNhanTienDo)
-- `ChoXacNhan` - Pending confirmation
+- `ChuaXacNhan` - Not confirmed
 - `DaXacNhan` - Confirmed
 - `TuChoi` - Rejected
 

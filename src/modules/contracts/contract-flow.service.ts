@@ -22,7 +22,7 @@ export class ContractFlowService {
    * - Tao hop dong (CongViec)
    * - Cap nhat bao gia thanh DuocChon, cac bao gia khac thanh TuChoi
    * - Tao thanh toan escrow (100% gia thoa + phi giam sat)
-   * - Cap nhat trang thai yeu cau thanh DaDong
+   * - Cap nhat trang thai yeu cau thanh DaChot
    */
   async acceptProposal(
     payload: AcceptProposalDto,
@@ -54,13 +54,33 @@ export class ContractFlowService {
       throw new BadRequestException('Ban khong co quyen chap nhan bao gia nay');
     }
 
+    if (
+      baoGia.YeuCau.TrangThai !== 'DangNhanHoSo' &&
+      baoGia.YeuCau.TrangThai !== 'DaDong'
+    ) {
+      throw new BadRequestException('Yeu cau khong the chot freelancer');
+    }
+
     const giaThoa = Number(baoGia.GiaDeXuat);
     const phiGiamSat = payload.phiGiamSat ?? 0;
     const tongThanhToan = giaThoa + phiGiamSat;
 
     // Transaction: create contract + escrow payment + update statuses
     const result = await this.prisma.$transaction(async (tx) => {
-      // 1. Tao hop dong
+      // Claim the request atomically so concurrent selections cannot create two jobs.
+      const selected = await tx.yeuCau.updateMany({
+        where: {
+          YeuCauID: baoGia.YeuCauID,
+          TrangThai: { in: ['DangNhanHoSo', 'DaDong'] },
+        },
+        data: { TrangThai: 'DaChot' },
+      });
+
+      if (selected.count !== 1) {
+        throw new BadRequestException('Yeu cau da duoc chot hoac da huy');
+      }
+
+      // 1. Tao cong viec tu freelancer duoc chot
       const congViec = await tx.congViec.create({
         data: {
           YeuCauID: baoGia.YeuCauID,
@@ -106,17 +126,12 @@ export class ContractFlowService {
         data: { TrangThai: 'TuChoi' },
       });
 
-      // 5. Cap nhat trang thai yeu cau thanh DaDong
-      await tx.yeuCau.update({
-        where: { YeuCauID: baoGia.YeuCauID },
-        data: { TrangThai: 'DaDong' },
-      });
-
       return { congViec, thanhToan };
     });
 
     return {
-      message: 'Chap nhan bao gia thanh cong. Tien da duoc giu boi he thong (escrow).',
+      message:
+        'Chap nhan bao gia thanh cong. Tien da duoc giu boi he thong (escrow).',
       congViecId: result.congViec.CongViecID,
       escrow: {
         giaThoa: giaThoa.toString(),
@@ -145,7 +160,9 @@ export class ContractFlowService {
     }
 
     if (congViec.TrangThai !== 'DangThucHien') {
-      throw new BadRequestException('Hop dong khong o trang thai dang thuc hien');
+      throw new BadRequestException(
+        'Hop dong khong o trang thai dang thuc hien',
+      );
     }
 
     if (!congViec.DaThanhToanEscrow) {
@@ -220,17 +237,23 @@ export class ContractFlowService {
     if (payload.role === 'Freelancer') {
       // FreelancerID in CongViec is now TaiKhoanID directly
       if (congViec.FreelancerID !== payload.userId) {
-        throw new BadRequestException('UserId khong khop voi freelancer cua hop dong');
+        throw new BadRequestException(
+          'UserId khong khop voi freelancer cua hop dong',
+        );
       }
     } else if (payload.role === 'GiamSat') {
       // GiamSatID in CongViec is now TaiKhoanID directly
       if (congViec.GiamSatID !== payload.userId) {
-        throw new BadRequestException('UserId khong khop voi giam sat cua hop dong');
+        throw new BadRequestException(
+          'UserId khong khop voi giam sat cua hop dong',
+        );
       }
     } else if (payload.role === 'NguoiThue') {
       // NguoiThueID in CongViec is now TaiKhoanID directly
       if (congViec.NguoiThueID !== payload.userId) {
-        throw new BadRequestException('UserId khong khop voi nguoi thue cua hop dong');
+        throw new BadRequestException(
+          'UserId khong khop voi nguoi thue cua hop dong',
+        );
       }
     }
   }
@@ -308,12 +331,6 @@ export class ContractFlowService {
       await tx.freelancer.update({
         where: { TaiKhoanID: congViec.FreelancerID },
         data: { SoDu: { increment: freelancerNhan } },
-      });
-
-      // 6. Cap nhat yeu cau thanh HoanThanh
-      await tx.yeuCau.update({
-        where: { YeuCauID: congViec.YeuCauID },
-        data: { TrangThai: 'HoanThanh' },
       });
     });
 

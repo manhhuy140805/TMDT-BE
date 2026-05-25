@@ -44,7 +44,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (this.userSockets.get(userId)!.size === 0) {
         this.userSockets.delete(userId);
       }
-      console.log(`[Chat WS] User ${userId} disconnected (socket: ${client.id})`);
+      console.log(
+        `[Chat WS] User ${userId} disconnected (socket: ${client.id})`,
+      );
     }
   }
 
@@ -55,13 +57,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * Emit: { cuocHoiThoaiId: number }
    */
   @SubscribeMessage('joinConversation')
-  handleJoinConversation(
+  async handleJoinConversation(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { cuocHoiThoaiId: number },
-  ): void {
-    const room = `conversation_${data.cuocHoiThoaiId}`;
-    client.join(room);
-    console.log(`[Chat WS] Socket ${client.id} joined room ${room}`);
+  ): Promise<void> {
+    try {
+      const userId = this.requireSocketUserId(client);
+      await this.chatService.assertUserCanAccessConversation(
+        data.cuocHoiThoaiId,
+        userId,
+      );
+      const room = `conversation_${data.cuocHoiThoaiId}`;
+      client.join(room);
+      console.log(`[Chat WS] Socket ${client.id} joined room ${room}`);
+    } catch (error: any) {
+      client.emit('error', {
+        message: error.message || 'Failed to join conversation',
+      });
+    }
   }
 
   /**
@@ -89,6 +102,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: CreateMessageDto,
   ): Promise<void> {
     try {
+      const userId = this.requireSocketUserId(client);
+      if (userId !== data.nguoiGuiId) {
+        throw new Error('Nguoi gui khong khop voi ket noi hien tai');
+      }
+
       const result = await this.chatService.createMessage(data);
 
       // Broadcast to all clients in the conversation room
@@ -100,17 +118,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const conversation = await this.chatService.findConversationById(
         data.cuocHoiThoaiId,
       );
-      const otherUserId =
-        conversation.conversation.thanhVien1.taiKhoanId === data.nguoiGuiId
-          ? conversation.conversation.thanhVien2.taiKhoanId
-          : conversation.conversation.thanhVien1.taiKhoanId;
+      const recipientIds = [
+        conversation.conversation.thanhVien1.taiKhoanId,
+        conversation.conversation.thanhVien2.taiKhoanId,
+        conversation.conversation.giamSat?.taiKhoanId,
+      ].filter(
+        (recipientId): recipientId is number =>
+          recipientId !== undefined && recipientId !== data.nguoiGuiId,
+      );
 
-      this.emitToUser(otherUserId, 'messageNotification', {
-        cuocHoiThoaiId: data.cuocHoiThoaiId,
-        message: result.data,
-      });
+      for (const recipientId of new Set(recipientIds)) {
+        this.emitToUser(recipientId, 'messageNotification', {
+          cuocHoiThoaiId: data.cuocHoiThoaiId,
+          message: result.data,
+        });
+      }
     } catch (error: any) {
-      client.emit('error', { message: error.message || 'Failed to send message' });
+      client.emit('error', {
+        message: error.message || 'Failed to send message',
+      });
     }
   }
 
@@ -124,6 +150,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: { cuocHoiThoaiId: number; userId: number },
   ): Promise<void> {
     try {
+      const userId = this.requireSocketUserId(client);
+      if (userId !== data.userId) {
+        throw new Error('Nguoi dung khong khop voi ket noi hien tai');
+      }
+      await this.chatService.assertUserCanAccessConversation(
+        data.cuocHoiThoaiId,
+        userId,
+      );
       const result = await this.chatService.markAsRead(
         data.cuocHoiThoaiId,
         data.userId,
@@ -137,7 +171,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         count: result.count,
       });
     } catch (error: any) {
-      client.emit('error', { message: error.message || 'Failed to mark as read' });
+      client.emit('error', {
+        message: error.message || 'Failed to mark as read',
+      });
     }
   }
 
@@ -148,7 +184,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('typing')
   handleTyping(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { cuocHoiThoaiId: number; userId: number; isTyping: boolean },
+    @MessageBody()
+    data: { cuocHoiThoaiId: number; userId: number; isTyping: boolean },
   ): void {
     const room = `conversation_${data.cuocHoiThoaiId}`;
     client.to(room).emit('userTyping', {
@@ -180,5 +217,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const userId = client.handshake.query.userId;
     const parsed = parseInt(userId as string, 10);
     return isNaN(parsed) ? null : parsed;
+  }
+
+  private requireSocketUserId(client: Socket): number {
+    const userId = this.extractUserId(client);
+    if (!userId) {
+      throw new Error('Ket noi chua co TaiKhoanID hop le');
+    }
+    return userId;
   }
 }

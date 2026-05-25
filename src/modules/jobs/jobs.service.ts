@@ -75,11 +75,10 @@ const JOB_SELECT = {
 type JobEntity = Prisma.YeuCauGetPayload<{ select: typeof JOB_SELECT }>;
 
 const TRANG_THAI_VALUES: readonly TrangThaiYeuCau[] = [
-  'MoDau',
-  'DangMo',
+  'DangNhanHoSo',
   'DaDong',
+  'DaChot',
   'DaHuy',
-  'HoanThanh',
 ];
 
 @Injectable()
@@ -223,12 +222,13 @@ export class JobsService {
         ThoiHan: thoiHan,
         YeuCauGiamSat: giamSatId ? true : (payload.yeuCauGiamSat ?? false),
         GiamSatID: giamSatId,
-        TrangThai: 'DangMo',
-        YeuCauKyNangs: kyNangIds.length > 0
-          ? {
-              create: kyNangIds.map((id) => ({ KyNangID: id })),
-            }
-          : undefined,
+        TrangThai: 'DangNhanHoSo',
+        YeuCauKyNangs:
+          kyNangIds.length > 0
+            ? {
+                create: kyNangIds.map((id) => ({ KyNangID: id })),
+              }
+            : undefined,
       },
       select: JOB_SELECT,
     });
@@ -243,14 +243,31 @@ export class JobsService {
     id: number,
     payload: UpdateJobDto,
   ): Promise<JobMutationResponseDto> {
-    await this.findJobOrThrow(id);
+    const currentJob = await this.findJobOrThrow(id);
 
-    const data = await this.buildUpdateData(payload);
+    const data = await this.buildUpdateData(payload, currentJob.TrangThai);
+    const targetStatus = payload.trangThai;
+    delete data.TrangThai;
 
-    const job = await this.prisma.yeuCau.update({
-      where: { YeuCauID: id },
-      data,
-      select: JOB_SELECT,
+    const job = await this.prisma.$transaction(async (tx) => {
+      if (targetStatus && targetStatus !== currentJob.TrangThai) {
+        const transitioned = await tx.yeuCau.updateMany({
+          where: { YeuCauID: id, TrangThai: currentJob.TrangThai },
+          data: { TrangThai: targetStatus },
+        });
+
+        if (transitioned.count !== 1) {
+          throw new BadRequestException(
+            'Trang thai yeu cau da thay doi, vui long thu lai',
+          );
+        }
+      }
+
+      return tx.yeuCau.update({
+        where: { YeuCauID: id },
+        data,
+        select: JOB_SELECT,
+      });
     });
 
     return {
@@ -262,10 +279,19 @@ export class JobsService {
   async remove(id: number): Promise<JobDeleteResponseDto> {
     await this.findJobOrThrow(id);
 
-    await this.prisma.yeuCau.update({
-      where: { YeuCauID: id },
+    const cancelled = await this.prisma.yeuCau.updateMany({
+      where: {
+        YeuCauID: id,
+        TrangThai: { in: ['DangNhanHoSo', 'DaDong'] },
+      },
       data: { TrangThai: 'DaHuy' },
     });
+
+    if (cancelled.count !== 1) {
+      throw new BadRequestException(
+        'Khong the huy yeu cau da chot hoac da huy',
+      );
+    }
 
     return { message: 'Xoa yeu cau thanh cong', jobId: id };
   }
@@ -431,6 +457,7 @@ export class JobsService {
 
   private async buildUpdateData(
     payload: UpdateJobDto,
+    currentStatus: TrangThaiYeuCau,
   ): Promise<Prisma.YeuCauUpdateInput> {
     const data: Prisma.YeuCauUpdateInput = {};
 
@@ -471,6 +498,7 @@ export class JobsService {
 
     if (payload.trangThai !== undefined) {
       this.ensureValidTrangThai(payload.trangThai);
+      this.ensureAllowedStatusTransition(currentStatus, payload.trangThai);
       data.TrangThai = payload.trangThai;
     }
 
@@ -516,7 +544,10 @@ export class JobsService {
         tenLoai: job.LoaiDichVu.TenLoai,
       },
       giamSat: job.GiamSat
-        ? { giamSatId: job.GiamSat.DonViGiamSat?.GiamSatID ?? null, tenDonVi: job.GiamSat.DonViGiamSat?.TenDonVi ?? job.GiamSat.HoTen }
+        ? {
+            giamSatId: job.GiamSat.TaiKhoanID,
+            tenDonVi: job.GiamSat.DonViGiamSat?.TenDonVi ?? job.GiamSat.HoTen,
+          }
         : null,
       kyNangs,
     };
@@ -536,6 +567,30 @@ export class JobsService {
       !TRANG_THAI_VALUES.includes(trangThai as TrangThaiYeuCau)
     ) {
       throw new BadRequestException('TrangThai khong hop le');
+    }
+  }
+
+  private ensureAllowedStatusTransition(
+    currentStatus: TrangThaiYeuCau,
+    targetStatus: TrangThaiYeuCau,
+  ): void {
+    if (currentStatus === targetStatus) {
+      return;
+    }
+
+    const transitions: Record<TrangThaiYeuCau, readonly TrangThaiYeuCau[]> = {
+      DangNhanHoSo: ['DaDong', 'DaHuy'],
+      DaDong: ['DaHuy'],
+      DaChot: [],
+      DaHuy: [],
+    };
+
+    if (!transitions[currentStatus].includes(targetStatus)) {
+      throw new BadRequestException(
+        targetStatus === 'DaChot'
+          ? 'Yeu cau chi duoc chot khi chon bao gia de tao cong viec'
+          : 'Khong the chuyen trang thai yeu cau theo cach nay',
+      );
     }
   }
 }

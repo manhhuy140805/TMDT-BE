@@ -39,7 +39,9 @@ export type ContractWithDetailsDto = ContractDto & {
   };
   giamSat: {
     giamSatId: number | null;
+    taiKhoanId?: number;
     tenDonVi: string;
+    email?: string;
   } | null;
 };
 

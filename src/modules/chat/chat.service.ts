@@ -34,6 +34,15 @@ const CONVERSATION_SELECT = {
   ThanhVien2: {
     select: { TaiKhoanID: true, HoTen: true, Email: true },
   },
+  CongViec: {
+    select: {
+      GiamSatID: true,
+      TrangThaiGiamSat: true,
+      GiamSat: {
+        select: { TaiKhoanID: true, HoTen: true, Email: true },
+      },
+    },
+  },
 } as const;
 
 const MESSAGE_SELECT = {
@@ -56,6 +65,8 @@ type ConversationEntity = Prisma.CuocHoiThoaiGetPayload<{
 type MessageEntity = Prisma.TinNhanGetPayload<{
   select: typeof MESSAGE_SELECT;
 }>;
+
+const SUPERVISOR_CHAT_STATUSES = ['DangGiamSat', 'HoanThanh'] as const;
 
 @Injectable()
 export class ChatService {
@@ -81,7 +92,18 @@ export class ChatService {
   ): Promise<ConversationListResponseDto> {
     const conversations = await this.prisma.cuocHoiThoai.findMany({
       where: {
-        OR: [{ ThanhVien1ID: userId }, { ThanhVien2ID: userId }],
+        OR: [
+          { ThanhVien1ID: userId },
+          { ThanhVien2ID: userId },
+          {
+            CongViec: {
+              is: {
+                GiamSatID: userId,
+                TrangThaiGiamSat: { in: [...SUPERVISOR_CHAT_STATUSES] },
+              },
+            },
+          },
+        ],
       },
       select: CONVERSATION_SELECT,
       orderBy: { TinNhanCuoi: { sort: 'desc', nulls: 'last' } },
@@ -124,8 +146,14 @@ export class ChatService {
       where: {
         CongViecID: payload.congViecId || null,
         OR: [
-          { ThanhVien1ID: payload.thanhVien1Id, ThanhVien2ID: payload.thanhVien2Id },
-          { ThanhVien1ID: payload.thanhVien2Id, ThanhVien2ID: payload.thanhVien1Id },
+          {
+            ThanhVien1ID: payload.thanhVien1Id,
+            ThanhVien2ID: payload.thanhVien2Id,
+          },
+          {
+            ThanhVien1ID: payload.thanhVien2Id,
+            ThanhVien2ID: payload.thanhVien1Id,
+          },
         ],
       },
       select: CONVERSATION_SELECT,
@@ -209,7 +237,7 @@ export class ChatService {
   ): Promise<MessageMutationResponseDto> {
     const conversation = await this.prisma.cuocHoiThoai.findUnique({
       where: { CuocHoiThoaiID: payload.cuocHoiThoaiId },
-      select: { CuocHoiThoaiID: true, TrangThai: true, ThanhVien1ID: true, ThanhVien2ID: true },
+      select: CONVERSATION_SELECT,
     });
 
     if (!conversation) {
@@ -220,11 +248,7 @@ export class ChatService {
       throw new BadRequestException('Cuoc hoi thoai da dong');
     }
 
-    // Validate sender is a member
-    if (
-      payload.nguoiGuiId !== conversation.ThanhVien1ID &&
-      payload.nguoiGuiId !== conversation.ThanhVien2ID
-    ) {
+    if (!this.canAccessConversation(conversation, payload.nguoiGuiId)) {
       throw new BadRequestException('Nguoi gui khong thuoc cuoc hoi thoai nay');
     }
 
@@ -261,11 +285,17 @@ export class ChatService {
   ): Promise<MarkReadResponseDto> {
     const conversation = await this.prisma.cuocHoiThoai.findUnique({
       where: { CuocHoiThoaiID: conversationId },
-      select: { CuocHoiThoaiID: true },
+      select: CONVERSATION_SELECT,
     });
 
     if (!conversation) {
       throw new NotFoundException('Cuoc hoi thoai khong ton tai');
+    }
+
+    if (!this.canAccessConversation(conversation, userId)) {
+      throw new BadRequestException(
+        'Nguoi dung khong thuoc cuoc hoi thoai nay',
+      );
     }
 
     // Mark all messages NOT sent by this user as read
@@ -282,6 +312,26 @@ export class ChatService {
       message: 'Danh dau da doc thanh cong',
       count: result.count,
     };
+  }
+
+  async assertUserCanAccessConversation(
+    conversationId: number,
+    userId: number,
+  ): Promise<void> {
+    const conversation = await this.prisma.cuocHoiThoai.findUnique({
+      where: { CuocHoiThoaiID: conversationId },
+      select: CONVERSATION_SELECT,
+    });
+
+    if (!conversation) {
+      throw new NotFoundException('Cuoc hoi thoai khong ton tai');
+    }
+
+    if (!this.canAccessConversation(conversation, userId)) {
+      throw new BadRequestException(
+        'Nguoi dung khong thuoc cuoc hoi thoai nay',
+      );
+    }
   }
 
   // ── Private helpers ────────────────────────────────────────────────────────
@@ -303,6 +353,10 @@ export class ChatService {
       congViecId: c.CongViecID,
       thanhVien1: this.toMemberDto(c.ThanhVien1),
       thanhVien2: this.toMemberDto(c.ThanhVien2),
+      giamSat:
+        this.isSupervisorChatEnabled(c) && c.CongViec?.GiamSat
+          ? this.toMemberDto(c.CongViec.GiamSat)
+          : null,
       tinNhanCuoi: c.TinNhanCuoi ? c.TinNhanCuoi.toISOString() : null,
       trangThai: c.TrangThai,
       ngayTao: c.NgayTao.toISOString(),
@@ -331,5 +385,26 @@ export class ChatService {
       hoTen: member.HoTen,
       email: member.Email,
     };
+  }
+
+  private canAccessConversation(
+    c: ConversationEntity,
+    userId: number,
+  ): boolean {
+    return (
+      c.ThanhVien1ID === userId ||
+      c.ThanhVien2ID === userId ||
+      (this.isSupervisorChatEnabled(c) && c.CongViec?.GiamSatID === userId)
+    );
+  }
+
+  private isSupervisorChatEnabled(c: ConversationEntity): boolean {
+    return Boolean(
+      c.CongViec &&
+      SUPERVISOR_CHAT_STATUSES.includes(
+        c.CongViec
+          .TrangThaiGiamSat as (typeof SUPERVISOR_CHAT_STATUSES)[number],
+      ),
+    );
   }
 }

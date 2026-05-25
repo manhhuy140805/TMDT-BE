@@ -11,6 +11,7 @@ export type ConversationDto = {
   congViecId: number | null;
   thanhVien1: MemberSummaryDto;
   thanhVien2: MemberSummaryDto;
+  giamSat: MemberSummaryDto | null;
   tinNhanCuoi: string | null;
   trangThai: TrangThaiCuocHoiThoai;
   ngayTao: string;

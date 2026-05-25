@@ -114,8 +114,8 @@ CREATE TABLE YeuCau (
     NganSachMin     DECIMAL(15,2)   NOT NULL DEFAULT 0.00,
     NganSachMax     DECIMAL(15,2)   NOT NULL DEFAULT 0.00,
     ThoiHan         DATE            NOT NULL,
-    TrangThai       ENUM('MoDau','DangMo','DaDong','DaHuy','HoanThanh')
-                    NOT NULL DEFAULT 'MoDau',
+    TrangThai       ENUM('DangNhanHoSo','DaDong','DaChot','DaHuy')
+                    NOT NULL DEFAULT 'DangNhanHoSo',
     SoLuongBaoGia   INT             NOT NULL DEFAULT 0,
     YeuCauGiamSat   TINYINT(1)      NOT NULL DEFAULT 0
                     COMMENT 'TRUE nếu công việc cần đơn vị giám sát (UC-41)',

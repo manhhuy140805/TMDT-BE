@@ -32,16 +32,16 @@ RESTART IDENTITY CASCADE;
 
 INSERT INTO "LoaiDichVu" ("LoaiDichVuID", "TenLoai", "MoTa", "HinhAnh")
 VALUES
-	(1, 'Thiết kế UI/UX', 'Thiết kế giao diện web và mobile', 'uiux.png'),
-	(2, 'Lập trình backend', 'Phát triển API, hệ thống nghiệp vụ', 'backend.png'),
-	(3, 'Digital marketing', 'SEO, quảng cáo, social media', 'marketing.png'),
-	(4, 'Thiết kế logo', 'Logo và brand identity', 'logo.png'),
-	(5, 'Mobile app', 'Phát triển ứng dụng di động', 'mobile.png'),
-	(6, 'Frontend web', 'Giao diện web hiện đại', 'frontend.png'),
-	(7, 'DevOps', 'CI/CD và hạ tầng', 'devops.png'),
-	(8, 'QA testing', 'Kiểm thử và báo cáo lỗi', 'qa.png'),
-	(9, 'Data analytics', 'Phân tích dữ liệu', 'data.png'),
-	(10, 'AI/ML', 'Mô hình học máy', 'ai.png')
+	(1, 'Thiết kế UI/UX', 'Thiết kế giao diện web và mobile', 'palette'),
+	(2, 'Lập trình backend', 'Phát triển API, hệ thống nghiệp vụ', 'server-cog'),
+	(3, 'Digital marketing', 'SEO, quảng cáo, social media', 'megaphone'),
+	(4, 'Thiết kế logo', 'Logo và brand identity', 'pen-tool'),
+	(5, 'Mobile app', 'Phát triển ứng dụng di động', 'smartphone'),
+	(6, 'Frontend web', 'Giao diện web hiện đại', 'panels-top-left'),
+	(7, 'DevOps', 'CI/CD và hạ tầng', 'cloud-cog'),
+	(8, 'QA testing', 'Kiểm thử và báo cáo lỗi', 'shield-check'),
+	(9, 'Data analytics', 'Phân tích dữ liệu', 'chart-column-increasing'),
+	(10, 'AI/ML', 'Mô hình học máy', 'brain-circuit')
 ON CONFLICT ("LoaiDichVuID") DO NOTHING;
 
 INSERT INTO "TaiKhoan"
@@ -73,9 +73,9 @@ VALUES
 	(24, 'user_24', '123123', 'user24@example.com', 'User 24', '0901000024', 'Nu', 'Can Tho', 'DonViGiamSat', 'HoatDong', '2026-04-18 10:25:00', '2026-04-22 10:55:00'),
 	(25, 'user_25', '123123', 'user25@example.com', 'User 25', '0901000025', 'Nam', 'Hue', 'DonViGiamSat', 'HoatDong', '2026-04-18 10:30:00', '2026-04-22 11:00:00'),
 	(26, 'user_26', '123123', 'user26@example.com', 'User 26', '0901000026', 'Nu', 'Nha Trang', 'DonViGiamSat', 'HoatDong', '2026-04-18 10:35:00', '2026-04-22 11:05:00'),
-	(27, 'user_27', '123123', 'user27@example.com', 'User 27', '0901000027', 'Nam', 'Vung Tau', 'DonViGiamSat', 'HoatDong', '2026-04-18 10:40:00', '2026-04-22 11:10:00'),
-	(28, 'user_28', '123123', 'user28@example.com', 'User 28', '0901000028', 'Nu', 'Ha Noi', 'DonViGiamSat', 'HoatDong', '2026-04-18 10:45:00', '2026-04-22 11:15:00'),
-	(29, 'user_29', '123123', 'user29@example.com', 'User 29', '0901000029', 'Nam', 'TP HCM', 'Admin', 'HoatDong', '2026-04-18 10:50:00', '2026-04-22 11:20:00'),
+	(27, 'user_27', '123123', 'user27@example.com', 'User 27', '0901000027', 'Nam', 'Vung Tau', 'DonViGiamSat', 'DaBi', '2026-04-18 10:40:00', '2026-04-22 11:10:00'),
+	(28, 'user_28', '123123', 'user28@example.com', 'User 28', '0901000028', 'Nu', 'Ha Noi', 'DonViGiamSat', 'ChoDuyet', '2026-04-18 10:45:00', '2026-04-22 11:15:00'),
+	(29, 'user_29', '123123', 'user29@example.com', 'User 29', '0901000029', 'Nam', 'TP HCM', 'Admin', 'BiKhoa', '2026-04-18 10:50:00', '2026-04-22 11:20:00'),
 	(30, 'user_30', '123123', 'user30@example.com', 'User 30', '0901000030', 'Nu', 'Da Nang', 'Admin', 'HoatDong', '2026-04-18 10:55:00', '2026-04-22 11:25:00')
 ON CONFLICT ("TaiKhoanID") DO NOTHING;
 
@@ -112,9 +112,9 @@ INSERT INTO "DonViGiamSat"
 VALUES
 	(1, 5, 'Eagle Supervisors', 'Don vi giam sat tien do va chat luong', 'Kiem thu, quy trinh, bao cao', 'ISO-9001', 500000.00, 4.70, 40, 'HoatDong', '2026-04-10 09:00:00'),
 	(2, 21, 'ISO Quality Control', 'Giam sat chat luong ISO', 'Kiem thu, bao cao, ISO', 'ISO-CERT', 450000.00, 4.50, 35, 'HoatDong', '2026-04-11 09:00:00'),
-	(3, 22, 'Tech Audit Pro', 'Giam sat ky thuat chuyen nghiep', 'Quy trinh, audit, kiem thu', 'CERT-TECH', 480000.00, 4.35, 28, 'HoatDong', '2026-04-12 09:00:00'),
-	(4, 23, 'QA Supervisors', 'Don vi dam bao chat luong', 'Bao cao, kiem thu, QA', 'QA-CERT', 520000.00, 4.40, 30, 'HoatDong', '2026-04-13 09:00:00'),
-	(5, 24, 'Process Control', 'Kiem soat quy trinh', 'Quy trinh, ISO, audit', 'ISO-PROC', 500000.00, 4.20, 22, 'HoatDong', '2026-04-14 09:00:00'),
+	(3, 22, 'Tech Audit Pro', 'Giam sat ky thuat chuyen nghiep', 'Quy trinh, audit, kiem thu', 'CERT-TECH', 480000.00, 4.35, 28, 'ChoDuyet', '2026-04-12 09:00:00'),
+	(4, 23, 'QA Supervisors', 'Don vi dam bao chat luong', 'Bao cao, kiem thu, QA', 'QA-CERT', 520000.00, 4.40, 30, 'TamNghi', '2026-04-13 09:00:00'),
+	(5, 24, 'Process Control', 'Kiem soat quy trinh', 'Quy trinh, ISO, audit', 'ISO-PROC', 500000.00, 4.20, 22, 'BiKhoa', '2026-04-14 09:00:00'),
 	(6, 25, 'Quality Assurance', 'Dam bao chat luong toan dien', 'Kiem thu, QA, bao cao', 'QA-PRO', 530000.00, 4.45, 32, 'HoatDong', '2026-04-15 09:00:00'),
 	(7, 26, 'Audit & Report', 'Kiem toan va bao cao', 'Audit, bao cao, quy trinh', 'AUDIT-CERT', 470000.00, 4.15, 20, 'HoatDong', '2026-04-16 09:00:00'),
 	(8, 27, 'Security Watch', 'Giam sat bao mat', 'Bao cao, quy trinh, bao mat', 'SEC-CERT', 460000.00, 4.25, 24, 'HoatDong', '2026-04-17 09:00:00'),
@@ -125,56 +125,58 @@ INSERT INTO "YeuCau"
 	("YeuCauID", "TaiKhoanID", "LoaiDichVuID", "GiamSatID", "TieuDe", "MoTa", "NganSachMin", "NganSachMax", "ThoiHan", "TrangThai", "SoLuongBaoGia", "YeuCauGiamSat", "NgayTao", "NgayCapNhat")
 VALUES
 	-- Backend (8 yêu cầu - nhiều nhất)
-	(1, 1, 2, 5, 'Xây dựng API NestJS', 'Cần xây dựng hệ thống API RESTful quản lý đơn hàng và thanh toán. Yêu cầu tích hợp cổng thanh toán VNPay, Momo, xử lý đơn hàng realtime, quản lý trạng thái đơn hàng và gửi thông báo tự động cho khách hàng.', 25000000.00, 40000000.00, '2026-06-01', 'DangMo', 0, true, '2026-04-19 10:00:00', '2026-04-22 10:00:00'),
-	(2, 2, 2, 21, 'API quản lý kho', 'Xây dựng API quản lý kho hàng và tồn kho với các tính năng: nhập/xuất kho, kiểm kê tự động, cảnh báo hàng sắp hết, báo cáo tồn kho theo thời gian thực. Cần tích hợp với hệ thống bán hàng hiện tại.', 20000000.00, 35000000.00, '2026-06-05', 'DangMo', 0, true, '2026-04-19 10:10:00', '2026-04-22 10:05:00'),
-	(3, 7, 2, NULL, 'Backend hệ thống CRM', 'Phát triển backend cho hệ thống CRM quản lý khách hàng, lịch sử tương tác, phân loại khách hàng, tự động hóa email marketing và báo cáo phân tích hành vi khách hàng. Yêu cầu có API cho mobile app.', 30000000.00, 50000000.00, '2026-06-10', 'DangMo', 0, false, '2026-04-19 10:20:00', '2026-04-22 10:10:00'),
-	(4, 8, 2, 22, 'API thanh toán', 'Tích hợp cổng thanh toán quốc tế (Stripe, PayPal) và nội địa (VNPay, ZaloPay). Xử lý giao dịch an toàn, hoàn tiền tự động, lưu lịch sử giao dịch và tạo báo cáo doanh thu theo ngày/tháng.', 18000000.00, 30000000.00, '2026-06-15', 'DangMo', 0, true, '2026-04-19 10:30:00', '2026-04-22 10:15:00'),
-	(5, 9, 2, NULL, 'Microservices architecture', 'Xây dựng kiến trúc microservices cho hệ thống lớn với các service: User, Product, Order, Payment, Notification. Sử dụng RabbitMQ/Kafka cho message queue, Redis cho caching, và Docker/Kubernetes cho deployment.', 35000000.00, 60000000.00, '2026-06-20', 'DangMo', 0, false, '2026-04-19 10:40:00', '2026-04-22 10:20:00'),
-	(6, 10, 2, 23, 'API quản lý người dùng', 'Backend quản lý người dùng với authentication JWT, phân quyền RBAC chi tiết, quản lý profile, đổi mật khẩu, xác thực 2FA, và tích hợp đăng nhập qua Google/Facebook. Cần có audit log đầy đủ.', 15000000.00, 28000000.00, '2026-06-25', 'DangMo', 0, true, '2026-04-19 10:50:00', '2026-04-22 10:25:00'),
-	(7, 1, 2, NULL, 'Backend e-commerce', 'Hệ thống backend hoàn chỉnh cho sàn thương mại điện tử: quản lý sản phẩm, giỏ hàng, đơn hàng, thanh toán, đánh giá sản phẩm, quản lý khuyến mãi và tích hợp vận chuyển (GHN, GHTK). Cần có admin dashboard API.', 28000000.00, 45000000.00, '2026-07-01', 'DangMo', 0, false, '2026-04-19 11:00:00', '2026-04-22 10:30:00'),
-	(8, 2, 2, NULL, 'API báo cáo thống kê', 'API tạo báo cáo và thống kê nghiệp vụ với các biểu đồ: doanh thu theo thời gian, top sản phẩm bán chạy, phân tích khách hàng, tỷ lệ chuyển đổi. Hỗ trợ export Excel/PDF và lọc dữ liệu linh hoạt.', 12000000.00, 22000000.00, '2026-07-05', 'DangMo', 0, false, '2026-04-19 11:10:00', '2026-04-22 10:35:00'),
+	(1, 1, 2, 21, 'Xây dựng API NestJS', 'Cần xây dựng hệ thống API RESTful quản lý đơn hàng và thanh toán. Yêu cầu tích hợp cổng thanh toán VNPay, Momo, xử lý đơn hàng realtime, quản lý trạng thái đơn hàng và gửi thông báo tự động cho khách hàng.', 25000000.00, 40000000.00, '2026-06-01', 'DaChot', 0, true, '2026-04-19 10:00:00', '2026-05-02 10:00:00'),
+	(2, 2, 2, 21, 'API quản lý kho', 'Xây dựng API quản lý kho hàng và tồn kho với các tính năng: nhập/xuất kho, kiểm kê tự động, cảnh báo hàng sắp hết, báo cáo tồn kho theo thời gian thực. Cần tích hợp với hệ thống bán hàng hiện tại.', 20000000.00, 35000000.00, '2026-06-05', 'DaChot', 0, true, '2026-04-19 10:10:00', '2026-05-03 10:05:00'),
+	(3, 7, 2, NULL, 'Backend hệ thống CRM', 'Phát triển backend cho hệ thống CRM quản lý khách hàng, lịch sử tương tác, phân loại khách hàng, tự động hóa email marketing và báo cáo phân tích hành vi khách hàng. Yêu cầu có API cho mobile app.', 30000000.00, 50000000.00, '2026-06-10', 'DangNhanHoSo', 0, false, '2026-04-19 10:20:00', '2026-04-22 10:10:00'),
+	(4, 8, 2, 22, 'API thanh toán', 'Tích hợp cổng thanh toán quốc tế (Stripe, PayPal) và nội địa (VNPay, ZaloPay). Xử lý giao dịch an toàn, hoàn tiền tự động, lưu lịch sử giao dịch và tạo báo cáo doanh thu theo ngày/tháng.', 18000000.00, 30000000.00, '2026-06-15', 'DangNhanHoSo', 0, true, '2026-04-19 10:30:00', '2026-04-22 10:15:00'),
+	(5, 9, 2, NULL, 'Microservices architecture', 'Xây dựng kiến trúc microservices cho hệ thống lớn với các service: User, Product, Order, Payment, Notification. Sử dụng RabbitMQ/Kafka cho message queue, Redis cho caching, và Docker/Kubernetes cho deployment.', 35000000.00, 60000000.00, '2026-06-20', 'DangNhanHoSo', 0, false, '2026-04-19 10:40:00', '2026-04-22 10:20:00'),
+	(6, 10, 2, 23, 'API quản lý người dùng', 'Backend quản lý người dùng với authentication JWT, phân quyền RBAC chi tiết, quản lý profile, đổi mật khẩu, xác thực 2FA, và tích hợp đăng nhập qua Google/Facebook. Cần có audit log đầy đủ.', 15000000.00, 28000000.00, '2026-06-25', 'DangNhanHoSo', 0, true, '2026-04-19 10:50:00', '2026-04-22 10:25:00'),
+	(7, 1, 2, 21, 'Backend e-commerce', 'Hệ thống backend hoàn chỉnh cho sàn thương mại điện tử: quản lý sản phẩm, giỏ hàng, đơn hàng, thanh toán, đánh giá sản phẩm, quản lý khuyến mãi và tích hợp vận chuyển (GHN, GHTK). Cần có admin dashboard API.', 28000000.00, 45000000.00, '2026-07-01', 'DaChot', 0, true, '2026-04-19 11:00:00', '2026-05-08 10:30:00'),
+	(8, 2, 2, NULL, 'API báo cáo thống kê', 'API tạo báo cáo và thống kê nghiệp vụ với các biểu đồ: doanh thu theo thời gian, top sản phẩm bán chạy, phân tích khách hàng, tỷ lệ chuyển đổi. Hỗ trợ export Excel/PDF và lọc dữ liệu linh hoạt.', 12000000.00, 22000000.00, '2026-07-05', 'DangNhanHoSo', 0, false, '2026-04-19 11:10:00', '2026-04-22 10:35:00'),
 	-- UI/UX (6 yêu cầu)
-	(9, 1, 1, 24, 'Thiết kế landing page', 'Cần thiết kế landing page hiện đại cho chiến dịch ra mắt sản phẩm mới. Yêu cầu responsive, tối ưu conversion rate, có animation mượt mà, tích hợp form đăng ký và tương thích mọi thiết bị.', 5000000.00, 9000000.00, '2026-07-10', 'DangMo', 0, true, '2026-04-19 11:20:00', '2026-04-22 10:40:00'),
-	(10, 7, 1, NULL, 'Thiết kế app mobile', 'Thiết kế giao diện app mobile iOS/Android theo chuẩn Material Design và Human Interface Guidelines. Cần có wireframe, mockup chi tiết, prototype tương tác và design system hoàn chỉnh với component library.', 8000000.00, 15000000.00, '2026-07-15', 'DangMo', 0, false, '2026-04-19 11:30:00', '2026-04-22 10:45:00'),
-	(11, 8, 1, NULL, 'UI dashboard admin', 'Thiết kế giao diện quản trị hệ thống với các màn hình: dashboard tổng quan, quản lý người dùng, báo cáo thống kê, cài đặt hệ thống. Cần có dark mode, responsive và tối ưu cho nhiều loại dữ liệu.', 6000000.00, 12000000.00, '2026-07-20', 'DangMo', 0, false, '2026-04-19 11:40:00', '2026-04-22 10:50:00'),
-	(12, 9, 1, 25, 'UX research và thiết kế', 'Nghiên cứu người dùng thông qua phỏng vấn, khảo sát, phân tích hành vi. Tạo user persona, user journey map, wireframe và thiết kế giao diện dựa trên insights thu thập được. Bao gồm usability testing.', 10000000.00, 18000000.00, '2026-07-25', 'DangMo', 0, true, '2026-04-19 11:50:00', '2026-04-22 10:55:00'),
-	(13, 10, 1, NULL, 'Redesign website', 'Thiết kế lại toàn bộ website công ty với phong cách hiện đại, chuyên nghiệp. Bao gồm trang chủ, giới thiệu, dịch vụ, blog, liên hệ. Cần có animation, micro-interactions và tối ưu SEO.', 12000000.00, 20000000.00, '2026-08-01', 'DangMo', 0, false, '2026-04-19 12:00:00', '2026-04-22 11:00:00'),
-	(14, 2, 1, NULL, 'UI kit và design system', 'Xây dựng UI kit và design system hoàn chỉnh với typography, color palette, spacing, components, icons. Tạo tài liệu hướng dẫn sử dụng và file Figma có tổ chức để team dev dễ implement.', 7000000.00, 13000000.00, '2026-08-05', 'DangMo', 0, false, '2026-04-19 12:10:00', '2026-04-22 11:05:00'),
+	(9, 1, 1, 21, 'Thiết kế landing page', 'Cần thiết kế landing page hiện đại cho chiến dịch ra mắt sản phẩm mới. Yêu cầu responsive, tối ưu conversion rate, có animation mượt mà, tích hợp form đăng ký và tương thích mọi thiết bị.', 5000000.00, 9000000.00, '2026-07-10', 'DaDong', 0, true, '2026-04-19 11:20:00', '2026-05-10 10:40:00'),
+	(10, 7, 1, NULL, 'Thiết kế app mobile', 'Thiết kế giao diện app mobile iOS/Android theo chuẩn Material Design và Human Interface Guidelines. Cần có wireframe, mockup chi tiết, prototype tương tác và design system hoàn chỉnh với component library.', 8000000.00, 15000000.00, '2026-07-15', 'DangNhanHoSo', 0, false, '2026-04-19 11:30:00', '2026-04-22 10:45:00'),
+	(11, 8, 1, NULL, 'UI dashboard admin', 'Thiết kế giao diện quản trị hệ thống với các màn hình: dashboard tổng quan, quản lý người dùng, báo cáo thống kê, cài đặt hệ thống. Cần có dark mode, responsive và tối ưu cho nhiều loại dữ liệu.', 6000000.00, 12000000.00, '2026-07-20', 'DangNhanHoSo', 0, false, '2026-04-19 11:40:00', '2026-04-22 10:50:00'),
+	(12, 9, 1, 25, 'UX research và thiết kế', 'Nghiên cứu người dùng thông qua phỏng vấn, khảo sát, phân tích hành vi. Tạo user persona, user journey map, wireframe và thiết kế giao diện dựa trên insights thu thập được. Bao gồm usability testing.', 10000000.00, 18000000.00, '2026-07-25', 'DaHuy', 0, true, '2026-04-19 11:50:00', '2026-05-11 10:55:00'),
+	(13, 10, 1, NULL, 'Redesign website', 'Thiết kế lại toàn bộ website công ty với phong cách hiện đại, chuyên nghiệp. Bao gồm trang chủ, giới thiệu, dịch vụ, blog, liên hệ. Cần có animation, micro-interactions và tối ưu SEO.', 12000000.00, 20000000.00, '2026-08-01', 'DangNhanHoSo', 0, false, '2026-04-19 12:00:00', '2026-04-22 11:00:00'),
+	(14, 2, 1, NULL, 'UI kit và design system', 'Xây dựng UI kit và design system hoàn chỉnh với typography, color palette, spacing, components, icons. Tạo tài liệu hướng dẫn sử dụng và file Figma có tổ chức để team dev dễ implement.', 7000000.00, 13000000.00, '2026-08-05', 'DangNhanHoSo', 0, false, '2026-04-19 12:10:00', '2026-04-22 11:05:00'),
 	-- Frontend (5 yêu cầu)
-	(15, 1, 6, 26, 'Giao diện frontend React', 'Phát triển giao diện hiện đại với React 18, TypeScript, TailwindCSS. Cần responsive, tối ưu performance, lazy loading, code splitting. Tích hợp API backend, xử lý state với Redux Toolkit và có unit tests.', 7000000.00, 12000000.00, '2026-08-10', 'DangMo', 0, true, '2026-04-19 12:20:00', '2026-04-22 11:10:00'),
-	(16, 7, 6, NULL, 'Frontend dashboard', 'Phát triển dashboard quản trị với Vue.js 3, Composition API, Pinia. Hiển thị biểu đồ realtime (Chart.js), bảng dữ liệu phân trang, filter nâng cao, export Excel/PDF. Cần có dark mode và responsive.', 8000000.00, 14000000.00, '2026-08-15', 'DangMo', 0, false, '2026-04-19 12:30:00', '2026-04-22 11:15:00'),
-	(17, 8, 6, 27, 'Landing page responsive', 'Xây dựng landing page responsive với HTML5, CSS3, JavaScript. Có animation mượt mà (GSAP), form validation, tích hợp Google Analytics, tối ưu SEO on-page và đạt 90+ điểm PageSpeed Insights.', 5000000.00, 9000000.00, '2026-08-20', 'DangMo', 0, true, '2026-04-19 12:40:00', '2026-04-22 11:20:00'),
-	(18, 9, 6, NULL, 'Frontend e-commerce', 'Giao diện website bán hàng với React, Next.js. Trang chủ, danh mục sản phẩm, chi tiết sản phẩm, giỏ hàng, thanh toán, tài khoản người dùng. Tích hợp payment gateway, SEO-friendly, PWA support.', 10000000.00, 18000000.00, '2026-08-25', 'DangMo', 0, false, '2026-04-19 12:50:00', '2026-04-22 11:25:00'),
-	(19, 10, 6, NULL, 'Web app Next.js', 'Phát triển web app với Next.js 14, App Router, Server Components. Có authentication, realtime updates (Socket.io), file upload, notification system. Deploy lên Vercel với CI/CD tự động.', 12000000.00, 20000000.00, '2026-09-01', 'DangMo', 0, false, '2026-04-19 13:00:00', '2026-04-22 11:30:00'),
+	(15, 1, 6, 21, 'Giao diện frontend React', 'Phát triển giao diện hiện đại với React 18, TypeScript, TailwindCSS. Cần responsive, tối ưu performance, lazy loading, code splitting. Tích hợp API backend, xử lý state với Redux Toolkit và có unit tests.', 7000000.00, 12000000.00, '2026-08-10', 'DaChot', 0, true, '2026-04-19 12:20:00', '2026-05-14 11:10:00'),
+	(16, 7, 6, NULL, 'Frontend dashboard', 'Phát triển dashboard quản trị với Vue.js 3, Composition API, Pinia. Hiển thị biểu đồ realtime (Chart.js), bảng dữ liệu phân trang, filter nâng cao, export Excel/PDF. Cần có dark mode và responsive.', 8000000.00, 14000000.00, '2026-08-15', 'DangNhanHoSo', 0, false, '2026-04-19 12:30:00', '2026-04-22 11:15:00'),
+	(17, 8, 6, 27, 'Landing page responsive', 'Xây dựng landing page responsive với HTML5, CSS3, JavaScript. Có animation mượt mà (GSAP), form validation, tích hợp Google Analytics, tối ưu SEO on-page và đạt 90+ điểm PageSpeed Insights.', 5000000.00, 9000000.00, '2026-08-20', 'DangNhanHoSo', 0, true, '2026-04-19 12:40:00', '2026-04-22 11:20:00'),
+	(18, 9, 6, NULL, 'Frontend e-commerce', 'Giao diện website bán hàng với React, Next.js. Trang chủ, danh mục sản phẩm, chi tiết sản phẩm, giỏ hàng, thanh toán, tài khoản người dùng. Tích hợp payment gateway, SEO-friendly, PWA support.', 10000000.00, 18000000.00, '2026-08-25', 'DangNhanHoSo', 0, false, '2026-04-19 12:50:00', '2026-04-22 11:25:00'),
+	(19, 10, 6, NULL, 'Web app Next.js', 'Phát triển web app với Next.js 14, App Router, Server Components. Có authentication, realtime updates (Socket.io), file upload, notification system. Deploy lên Vercel với CI/CD tự động.', 12000000.00, 20000000.00, '2026-09-01', 'DangNhanHoSo', 0, false, '2026-04-19 13:00:00', '2026-04-22 11:30:00'),
 	-- Mobile app (4 yêu cầu)
-	(20, 1, 5, 28, 'App mobile bán hàng', 'Xây dựng app bán hàng iOS/Android với React Native. Tính năng: đăng nhập, duyệt sản phẩm, giỏ hàng, thanh toán, theo dõi đơn hàng, đánh giá sản phẩm, push notification. Tích hợp Firebase và payment gateway.', 30000000.00, 45000000.00, '2026-09-05', 'DangMo', 0, true, '2026-04-19 13:10:00', '2026-04-22 11:35:00'),
-	(21, 2, 5, NULL, 'App quản lý công việc', 'Ứng dụng quản lý task và project với Flutter. Tạo/chỉnh sửa task, gán người thực hiện, deadline, priority, comment, file đính kèm. Có Kanban board, Gantt chart, báo cáo tiến độ và sync realtime.', 25000000.00, 40000000.00, '2026-09-10', 'DangMo', 0, false, '2026-04-19 13:20:00', '2026-04-22 11:40:00'),
-	(22, 7, 5, NULL, 'App giao hàng', 'Ứng dụng cho shipper và khách hàng với React Native. Shipper: nhận đơn, định vị GPS, cập nhật trạng thái. Khách hàng: theo dõi đơn hàng realtime, đánh giá shipper. Tích hợp Google Maps và notification.', 28000000.00, 42000000.00, '2026-09-15', 'DangMo', 0, false, '2026-04-19 13:30:00', '2026-04-22 11:45:00'),
-	(23, 8, 5, NULL, 'App đặt lịch', 'Ứng dụng đặt lịch hẹn và quản lý với Flutter. Khách hàng: xem lịch trống, đặt lịch, nhận nhắc nhở. Nhân viên: quản lý lịch làm việc, xác nhận/hủy lịch. Có calendar view, push notification và payment.', 20000000.00, 35000000.00, '2026-09-20', 'DangMo', 0, false, '2026-04-19 13:40:00', '2026-04-22 11:50:00'),
+	(20, 1, 5, 21, 'App mobile bán hàng', 'Xây dựng app bán hàng iOS/Android với React Native. Tính năng: đăng nhập, duyệt sản phẩm, giỏ hàng, thanh toán, theo dõi đơn hàng, đánh giá sản phẩm, push notification. Tích hợp Firebase và payment gateway.', 30000000.00, 45000000.00, '2026-09-05', 'DaChot', 0, true, '2026-04-19 13:10:00', '2026-05-15 11:35:00'),
+	(21, 2, 5, NULL, 'App quản lý công việc', 'Ứng dụng quản lý task và project với Flutter. Tạo/chỉnh sửa task, gán người thực hiện, deadline, priority, comment, file đính kèm. Có Kanban board, Gantt chart, báo cáo tiến độ và sync realtime.', 25000000.00, 40000000.00, '2026-09-10', 'DangNhanHoSo', 0, false, '2026-04-19 13:20:00', '2026-04-22 11:40:00'),
+	(22, 7, 5, NULL, 'App giao hàng', 'Ứng dụng cho shipper và khách hàng với React Native. Shipper: nhận đơn, định vị GPS, cập nhật trạng thái. Khách hàng: theo dõi đơn hàng realtime, đánh giá shipper. Tích hợp Google Maps và notification.', 28000000.00, 42000000.00, '2026-09-15', 'DangNhanHoSo', 0, false, '2026-04-19 13:30:00', '2026-04-22 11:45:00'),
+	(23, 8, 5, NULL, 'App đặt lịch', 'Ứng dụng đặt lịch hẹn và quản lý với Flutter. Khách hàng: xem lịch trống, đặt lịch, nhận nhắc nhở. Nhân viên: quản lý lịch làm việc, xác nhận/hủy lịch. Có calendar view, push notification và payment.', 20000000.00, 35000000.00, '2026-09-20', 'DangNhanHoSo', 0, false, '2026-04-19 13:40:00', '2026-04-22 11:50:00'),
 	-- Digital Marketing (3 yêu cầu)
-	(24, 9, 3, NULL, 'SEO tổng thể website', 'Tối ưu SEO on-page và technical SEO cho website. Bao gồm: keyword research, tối ưu meta tags, heading structure, internal linking, sitemap, robots.txt, Core Web Vitals, mobile-friendly. Báo cáo hàng tuần.', 8000000.00, 15000000.00, '2026-09-25', 'DangMo', 0, false, '2026-04-19 13:50:00', '2026-04-22 11:55:00'),
-	(25, 10, 3, NULL, 'Chiến dịch Google Ads', 'Thiết lập và quản lý chiến dịch Google Ads (Search, Display, Shopping). Nghiên cứu từ khóa, viết ad copy, tối ưu landing page, A/B testing, theo dõi conversion. Ngân sách quảng cáo 20 triệu/tháng trong 3 tháng.', 10000000.00, 18000000.00, '2026-10-01', 'DangMo', 0, false, '2026-04-19 14:00:00', '2026-04-22 12:00:00'),
-	(26, 1, 3, NULL, 'Social media marketing', 'Quản lý và phát triển social media (Facebook, Instagram, TikTok). Lên content plan, thiết kế post, viết caption, chạy ads, tương tác với khách hàng, phân tích insights. Đăng 5-7 bài/tuần trong 3 tháng.', 6000000.00, 12000000.00, '2026-10-05', 'DangMo', 0, false, '2026-04-19 14:10:00', '2026-04-22 12:05:00'),
+	(24, 9, 3, NULL, 'SEO tổng thể website', 'Tối ưu SEO on-page và technical SEO cho website. Bao gồm: keyword research, tối ưu meta tags, heading structure, internal linking, sitemap, robots.txt, Core Web Vitals, mobile-friendly. Báo cáo hàng tuần.', 8000000.00, 15000000.00, '2026-09-25', 'DangNhanHoSo', 0, false, '2026-04-19 13:50:00', '2026-04-22 11:55:00'),
+	(25, 10, 3, NULL, 'Chiến dịch Google Ads', 'Thiết lập và quản lý chiến dịch Google Ads (Search, Display, Shopping). Nghiên cứu từ khóa, viết ad copy, tối ưu landing page, A/B testing, theo dõi conversion. Ngân sách quảng cáo 20 triệu/tháng trong 3 tháng.', 10000000.00, 18000000.00, '2026-10-01', 'DangNhanHoSo', 0, false, '2026-04-19 14:00:00', '2026-04-22 12:00:00'),
+	(26, 1, 3, NULL, 'Social media marketing', 'Quản lý và phát triển social media (Facebook, Instagram, TikTok). Lên content plan, thiết kế post, viết caption, chạy ads, tương tác với khách hàng, phân tích insights. Đăng 5-7 bài/tuần trong 3 tháng.', 6000000.00, 12000000.00, '2026-10-05', 'DangNhanHoSo', 0, false, '2026-04-19 14:10:00', '2026-04-22 12:05:00'),
 
 	-- DevOps (2 yêu cầu)
-	(27, 2, 7, NULL, 'Xây dựng CI/CD', 'Thiết lập pipeline CI/CD với GitHub Actions hoặc GitLab CI. Auto build, test, deploy lên staging/production. Tích hợp Docker, automated testing, code quality check (SonarQube), notification khi deploy thành công/thất bại.', 8000000.00, 15000000.00, '2026-10-10', 'DangMo', 0, false, '2026-04-19 14:20:00', '2026-04-22 12:10:00'),
-	(28, 7, 7, NULL, 'Setup infrastructure', 'Thiết lập hạ tầng trên AWS/GCP: EC2/Compute Engine, RDS/Cloud SQL, S3/Cloud Storage, Load Balancer, Auto Scaling, CloudWatch/Monitoring. Cấu hình security groups, backup tự động và disaster recovery plan.', 12000000.00, 22000000.00, '2026-10-15', 'DangMo', 0, false, '2026-04-19 14:30:00', '2026-04-22 12:15:00'),
+	(27, 2, 7, NULL, 'Xây dựng CI/CD', 'Thiết lập pipeline CI/CD với GitHub Actions hoặc GitLab CI. Auto build, test, deploy lên staging/production. Tích hợp Docker, automated testing, code quality check (SonarQube), notification khi deploy thành công/thất bại.', 8000000.00, 15000000.00, '2026-10-10', 'DangNhanHoSo', 0, false, '2026-04-19 14:20:00', '2026-04-22 12:10:00'),
+	(28, 7, 7, NULL, 'Setup infrastructure', 'Thiết lập hạ tầng trên AWS/GCP: EC2/Compute Engine, RDS/Cloud SQL, S3/Cloud Storage, Load Balancer, Auto Scaling, CloudWatch/Monitoring. Cấu hình security groups, backup tự động và disaster recovery plan.', 12000000.00, 22000000.00, '2026-10-15', 'DangNhanHoSo', 0, false, '2026-04-19 14:30:00', '2026-04-22 12:15:00'),
 
 	-- Logo (1 yêu cầu)
-	(29, 8, 4, NULL, 'Thiết kế logo', 'Thiết kế bộ nhận diện thương hiệu hoàn chỉnh: logo chính, logo phụ, color palette, typography, business card, letterhead, envelope. Giao file vector (AI, SVG) và hướng dẫn sử dụng brand guideline chi tiết.', 3000000.00, 6000000.00, '2026-10-20', 'DangMo', 0, false, '2026-04-19 14:40:00', '2026-04-22 12:20:00'),
+	(29, 8, 4, NULL, 'Thiết kế logo', 'Thiết kế bộ nhận diện thương hiệu hoàn chỉnh: logo chính, logo phụ, color palette, typography, business card, letterhead, envelope. Giao file vector (AI, SVG) và hướng dẫn sử dụng brand guideline chi tiết.', 3000000.00, 6000000.00, '2026-10-20', 'DangNhanHoSo', 0, false, '2026-04-19 14:40:00', '2026-04-22 12:20:00'),
 
 	-- QA Testing (1 yêu cầu)
-	(30, 9, 8, NULL, 'Kiểm thử hệ thống', 'Test và báo cáo lỗi toàn diện cho web app. Bao gồm: functional testing, UI/UX testing, performance testing, security testing, compatibility testing (browsers, devices). Viết test cases, báo cáo bug chi tiết với screenshots/videos.', 4000000.00, 8000000.00, '2026-10-25', 'DangMo', 0, false, '2026-04-19 14:50:00', '2026-04-22 12:25:00')
+	(30, 9, 8, NULL, 'Kiểm thử hệ thống', 'Test và báo cáo lỗi toàn diện cho web app. Bao gồm: functional testing, UI/UX testing, performance testing, security testing, compatibility testing (browsers, devices). Viết test cases, báo cáo bug chi tiết với screenshots/videos.', 4000000.00, 8000000.00, '2026-10-25', 'DangNhanHoSo', 0, false, '2026-04-19 14:50:00', '2026-04-22 12:25:00'),
+	-- Yeu cau da huy cua user 1 de demo day du vong doi tuyen freelancer
+	(31, 1, 4, NULL, 'Logo cho san pham thu nghiem', 'Yeu cau thiet ke logo da huy do thay doi ke hoach ra mat san pham.', 3000000.00, 5000000.00, '2026-07-15', 'DaHuy', 0, false, '2026-04-20 09:00:00', '2026-05-16 09:00:00')
 ON CONFLICT ("YeuCauID") DO NOTHING;
 
 INSERT INTO "BaoGia"
 	("BaoGiaID", "YeuCauID", "TaiKhoanID", "GiaDeXuat", "ThoiGianThucHien", "NoiDung", "TrangThai", "NgayTao", "NgayCapNhat")
 VALUES
-	(1, 1, 13, 7000000.00, 7, 'Đề xuất giao diện hiện đại với Figma, responsive cho mobile/tablet/desktop. Bao gồm wireframe, mockup chi tiết, prototype tương tác và design system. Giao 2 lần: wireframe sau 3 ngày, mockup hoàn chỉnh sau 7 ngày.', 'DaGui', '2026-04-20 08:00:00', '2026-04-22 10:20:00'),
-	(2, 1, 3, 7600000.00, 9, 'Đề xuất kết hợp design system với component library tái sử dụng. Thiết kế theo chuẩn Material Design, có dark mode, animation mượt mà. Bao gồm file Figma, assets và tài liệu hướng dẫn cho developer.', 'DaGui', '2026-04-20 08:10:00', '2026-04-22 10:25:00'),
-	(3, 2, 13, 30000000.00, 30, 'Xây dựng API RESTful với NestJS, PostgreSQL, Redis caching. Bao gồm authentication JWT, authorization RBAC, API documentation (Swagger), unit tests, integration tests, deployment script và monitoring dashboard.', 'DaGui', '2026-04-20 08:20:00', '2026-04-22 10:30:00'),
-	(4, 2, 4, 32000000.00, 35, 'API hoàn chỉnh với NestJS, Prisma ORM, Redis, RabbitMQ. Thêm monitoring với Grafana, logging với ELK stack, automated backup, CI/CD pipeline và tài liệu API chi tiết. Bảo hành 3 tháng.', 'DaGui', '2026-04-20 08:25:00', '2026-04-22 10:32:00'),
-	(5, 2, 14, 28000000.00, 28, 'API cơ bản với NestJS, PostgreSQL. Bao gồm CRUD operations, authentication, validation, error handling và API docs. Giao source code, database schema và hướng dẫn deployment.', 'DaGui', '2026-04-20 08:27:00', '2026-04-22 10:33:00'),
+	(1, 1, 13, 32000000.00, 30, 'Xây dựng REST API NestJS, PostgreSQL, Redis và tài liệu Swagger cho hệ thống của người thuê 1.', 'DuocChon', '2026-04-20 08:00:00', '2026-05-02 10:20:00'),
+	(2, 1, 3, 34000000.00, 28, 'Phương án API tối ưu hiệu năng và triển khai Docker, gửi bởi freelancer 3.', 'TuChoi', '2026-04-20 08:10:00', '2026-05-02 10:25:00'),
+	(3, 2, 13, 30000000.00, 30, 'Xây dựng API RESTful với NestJS, PostgreSQL, Redis caching. Bao gồm authentication JWT, authorization RBAC, API documentation (Swagger), unit tests, integration tests, deployment script và monitoring dashboard.', 'DuocChon', '2026-04-20 08:20:00', '2026-05-03 10:30:00'),
+	(4, 2, 4, 32000000.00, 35, 'API hoàn chỉnh với NestJS, Prisma ORM, Redis, RabbitMQ. Thêm monitoring với Grafana, logging với ELK stack, automated backup, CI/CD pipeline và tài liệu API chi tiết. Bảo hành 3 tháng.', 'TuChoi', '2026-04-20 08:25:00', '2026-05-03 10:32:00'),
+	(5, 2, 14, 28000000.00, 28, 'API cơ bản với NestJS, PostgreSQL. Bao gồm CRUD operations, authentication, validation, error handling và API docs. Giao source code, database schema và hướng dẫn deployment.', 'TuChoi', '2026-04-20 08:27:00', '2026-05-03 10:33:00'),
 	(6, 3, 13, 10000000.00, 21, 'SEO audit toàn diện và roadmap 3 tháng. Phân tích từ khóa, đối thủ, technical SEO, on-page SEO. Tối ưu meta tags, heading, internal linking, sitemap. Báo cáo hàng tuần với Google Analytics và Search Console.', 'DaGui', '2026-04-20 08:30:00', '2026-04-22 10:35:00'),
 	(7, 3, 18, 9500000.00, 20, 'SEO audit và tối ưu technical SEO: Core Web Vitals, mobile-friendly, structured data, robots.txt, sitemap XML. Keyword research và tối ưu 20 trang quan trọng. Báo cáo chi tiết sau mỗi sprint.', 'DaGui', '2026-04-20 08:32:00', '2026-04-22 10:36:00'),
 	(8, 4, 13, 4500000.00, 10, 'Thiết kế logo và nhận diện thương hiệu: 3 concept ban đầu, chỉnh sửa không giới hạn, giao file vector (AI, SVG, PDF), PNG với nhiều kích thước. Bao gồm color palette và typography guideline.', 'DaGui', '2026-04-20 08:40:00', '2026-04-22 10:40:00'),
@@ -184,23 +186,38 @@ VALUES
 	(12, 5, 11, 35000000.00, 30, 'App mobile với AI recommendation engine, chatbot hỗ trợ khách hàng, AR preview sản phẩm. Sử dụng React Native, TensorFlow Lite, ARKit/ARCore. Bao gồm admin panel web và analytics dashboard.', 'DaGui', '2026-04-20 08:52:00', '2026-04-22 10:46:00'),
 	(13, 6, 13, 9000000.00, 14, 'UI frontend hiện đại với React 18, TypeScript, TailwindCSS. Responsive, lazy loading, code splitting, SEO-friendly. Tích hợp API backend, state management với Redux Toolkit. Giao source code và deployment guide.', 'DaGui', '2026-04-20 09:00:00', '2026-04-22 10:50:00'),
 	(14, 6, 3, 10000000.00, 15, 'UI frontend React với Next.js 14, Server Components, App Router. Tối ưu performance, SEO, accessibility. Có unit tests, E2E tests với Playwright. Deploy lên Vercel với CI/CD tự động.', 'DaGui', '2026-04-20 09:02:00', '2026-04-22 10:51:00'),
-	(15, 7, 13, 12000000.00, 12, 'CI/CD pipeline với GitHub Actions: auto build, test, deploy. Tích hợp Docker, automated testing, code quality check (SonarQube), Slack notification. Setup staging và production environments với rollback tự động.', 'DaGui', '2026-04-20 09:10:00', '2026-04-22 10:55:00'),
-	(16, 7, 4, 13000000.00, 14, 'CI/CD pipeline hoàn chỉnh với GitLab CI, Docker, Kubernetes. Thêm monitoring với Prometheus/Grafana, logging với ELK stack, security scanning, performance testing. Tài liệu vận hành chi tiết.', 'DaGui', '2026-04-20 09:12:00', '2026-04-22 10:56:00'),
+	(15, 7, 13, 36000000.00, 45, 'Phát triển backend e-commerce hoàn chỉnh, bao gồm API quản trị, payment và shipping.', 'DuocChon', '2026-04-20 09:10:00', '2026-05-08 10:55:00'),
+	(16, 7, 4, 39000000.00, 50, 'Giải pháp e-commerce sử dụng microservices và Kubernetes.', 'TuChoi', '2026-04-20 09:12:00', '2026-05-08 10:56:00'),
 	(17, 9, 13, 8000000.00, 12, 'Dashboard KPI với biểu đồ realtime (Chart.js), bảng dữ liệu phân trang, filter nâng cao, export Excel/PDF. Sử dụng React, TypeScript, Material-UI. Responsive và có dark mode. Tích hợp WebSocket cho realtime updates.', 'DaGui', '2026-04-20 09:30:00', '2026-04-22 11:05:00'),
 	(18, 9, 11, 8500000.00, 13, 'Dashboard AI-powered với predictive analytics, anomaly detection, automated insights. Sử dụng React, D3.js, TensorFlow.js. Có voice commands, natural language queries và mobile app companion.', 'DaGui', '2026-04-20 09:32:00', '2026-04-22 11:06:00'),
-	(19, 12, 13, 14000000.00, 15, 'Bảo mật toàn diện: penetration testing, vulnerability assessment, security audit. Kiểm tra OWASP Top 10, SQL injection, XSS, CSRF. Báo cáo chi tiết với severity levels, proof of concept và remediation recommendations.', 'DaGui', '2026-04-20 10:00:00', '2026-04-22 11:20:00'),
-	(20, 12, 16, 15000000.00, 16, 'Pentest chuyên sâu với automated tools (Burp Suite, OWASP ZAP) và manual testing. Bao gồm network security, application security, API security. Giao báo cáo executive summary và technical report chi tiết.', 'DaGui', '2026-04-20 10:02:00', '2026-04-22 11:21:00'),
+	(19, 12, 13, 14000000.00, 15, 'Bảo mật toàn diện: penetration testing, vulnerability assessment, security audit. Kiểm tra OWASP Top 10, SQL injection, XSS, CSRF. Báo cáo chi tiết với severity levels, proof of concept và remediation recommendations.', 'HetHan', '2026-04-20 10:00:00', '2026-05-11 11:20:00'),
+	(20, 12, 16, 15000000.00, 16, 'Pentest chuyên sâu với automated tools (Burp Suite, OWASP ZAP) và manual testing. Bao gồm network security, application security, API security. Giao báo cáo executive summary và technical report chi tiết.', 'TuChoi', '2026-04-20 10:02:00', '2026-05-11 11:21:00'),
 	(21, 13, 18, 6500000.00, 9, 'SEO technical: tối ưu Core Web Vitals, mobile-friendly, structured data, sitemap XML, robots.txt. Fix broken links, duplicate content, crawl errors. Báo cáo với Google Search Console và PageSpeed Insights.', 'DaGui', '2026-04-20 10:10:00', '2026-04-22 11:25:00'),
 	(22, 13, 13, 6000000.00, 8, 'SEO technical tối ưu: page speed optimization, image compression, lazy loading, CDN setup, HTTPS migration. Tối ưu 15 trang quan trọng. Báo cáo trước/sau với metrics cụ thể.', 'DaGui', '2026-04-20 10:12:00', '2026-04-22 11:26:00'),
 	(23, 13, 14, 7000000.00, 10, 'SEO + content marketing: keyword research, content plan 3 tháng, viết 12 bài blog SEO-friendly, tối ưu on-page SEO, internal linking strategy. Báo cáo traffic và ranking hàng tuần.', 'DaGui', '2026-04-20 10:13:00', '2026-04-22 11:27:00'),
-	(24, 15, 13, 7000000.00, 10, 'Video marketing: kịch bản, quay phim, dựng video 30-60s cho social media. Bao gồm motion graphics, subtitles, background music. Giao 3 versions (Facebook, Instagram, TikTok) với aspect ratios khác nhau.', 'DaGui', '2026-04-20 10:30:00', '2026-04-22 11:35:00'),
+	(24, 15, 13, 9500000.00, 18, 'Phát triển frontend React, TypeScript và TailwindCSS cho yêu cầu của người thuê 1.', 'DuocChon', '2026-04-20 10:30:00', '2026-05-14 11:35:00'),
 	(25, 17, 13, 15000000.00, 20, 'Sàn thương mại điện tử với NestJS backend, React frontend. Tính năng: quản lý sản phẩm, đơn hàng, khách hàng, báo cáo doanh thu, tích hợp payment và shipping. Responsive, SEO-friendly, có admin panel.', 'DaGui', '2026-04-20 10:50:00', '2026-04-22 11:45:00'),
 	(26, 17, 4, 16000000.00, 22, 'E-commerce fullstack với microservices: User service, Product service, Order service, Payment service. Sử dụng Docker, Kubernetes, RabbitMQ, Redis. Có monitoring, logging và automated backup.', 'DaGui', '2026-04-20 10:52:00', '2026-04-22 11:46:00'),
 	(27, 19, 13, 9000000.00, 12, 'Branding hoàn chỉnh: logo, color palette, typography, brand voice, visual identity. Thiết kế business card, letterhead, presentation template, social media templates. Giao brand guideline 30+ trang.', 'DaGui', '2026-04-20 11:10:00', '2026-04-22 11:55:00'),
 	(28, 19, 20, 9500000.00, 13, 'Branding + identity system: logo suite, brand patterns, iconography, photography style, illustration style. Thiết kế marketing materials, packaging mockups. Bao gồm brand strategy document.', 'DaGui', '2026-04-20 11:12:00', '2026-04-22 11:56:00'),
 	(29, 23, 12, 9000000.00, 16, 'RPA automation với UiPath/Automation Anywhere: phân tích quy trình, thiết kế workflow, develop bots, testing, deployment. Tự động hóa 3-5 quy trình lặp đi lặp lại. Giao tài liệu và training cho team.', 'DaGui', '2026-04-20 11:50:00', '2026-04-22 12:15:00'),
-	(30, 27, 20, 18000000.00, 25, 'Game design document hoàn chỉnh: concept, mechanics, level design, art direction, sound design. Prototype với Unity, playtest report. Giao GDD 50+ trang và prototype build.', 'DaGui', '2026-04-20 12:00:00', '2026-04-22 12:20:00')
+	(30, 27, 20, 18000000.00, 25, 'Game design document hoàn chỉnh: concept, mechanics, level design, art direction, sound design. Prototype với Unity, playtest report. Giao GDD 50+ trang và prototype build.', 'DaGui', '2026-04-20 12:00:00', '2026-04-22 12:20:00'),
+	(31, 20, 3, 38000000.00, 55, 'React Native app bán hàng với Firebase, push notification và thanh toán online.', 'DuocChon', '2026-04-24 09:00:00', '2026-05-15 09:00:00'),
+	(32, 20, 13, 40000000.00, 50, 'Mobile app bán hàng đa nền tảng, kèm dashboard theo dõi đơn hàng.', 'TuChoi', '2026-04-24 09:10:00', '2026-05-15 09:10:00')
 ON CONFLICT ("BaoGiaID") DO NOTHING;
+
+-- ============================================================
+-- CONG VIEC: 5 trang thai, tap trung vao user 1, freelancer 3/13, giam sat 21
+-- ============================================================
+INSERT INTO "CongViec"
+	("CongViecID", "YeuCauID", "FreelancerID", "NguoiThueID", "GiamSatID", "GiaThoa", "ThoiGianThoa", "TrangThai", "NgayBatDau", "NgayKetThuc", "TrangThaiGiamSat", "PhiGiamSat", "FreelancerXacNhan", "GiamSatXacNhan", "NguoiThueXacNhan", "DaThanhToanEscrow", "NgayTao")
+VALUES
+	(1, 1, 13, 1, 21, 32000000.00, 30, 'DangThucHien', '2026-05-02 09:00:00', NULL, 'DangGiamSat', 450000.00, false, false, false, true, '2026-05-02 08:30:00'),
+	(2, 7, 13, 1, 21, 36000000.00, 45, 'HoanThanh', '2026-04-10 09:00:00', '2026-05-08 17:00:00', 'HoanThanh', 450000.00, true, true, true, true, '2026-04-09 08:30:00'),
+	(3, 15, 13, 1, 21, 9500000.00, 18, 'TranhChap', '2026-05-14 09:00:00', NULL, 'DangGiamSat', 450000.00, false, false, false, true, '2026-05-14 08:30:00'),
+	(4, 20, 3, 1, 21, 38000000.00, 55, 'DaHuy', NULL, NULL, 'TuChoi', 450000.00, false, false, false, false, '2026-05-15 08:30:00'),
+	(5, 2, 13, 2, 21, 30000000.00, 30, 'MoiTao', NULL, NULL, 'ChoDuyet', 450000.00, false, false, false, false, '2026-05-03 08:30:00')
+ON CONFLICT ("CongViecID") DO NOTHING;
 
 -- ============================================================
 -- Cap nhat SoLuongBaoGia trong YeuCau dua tren BaoGia thuc te
@@ -362,6 +379,143 @@ VALUES
 	(20, 14), (20, 6), (20, 27)
 ON CONFLICT DO NOTHING;
 
+-- ============================================================
+-- YEU CAU GIAM SAT: Du 4 trang thai cho cac cong viec demo
+-- ============================================================
+INSERT INTO "YeuCauGiamSat"
+	("YCGiamSatID", "CongViecID", "NguoiThueID", "GiamSatID", "FreelancerID", "TrangThai", "LyDoTuChoi", "PhiGiamSatThoa", "NgayYeuCau", "NgayChapNhan", "NgayHoanThanh")
+VALUES
+	(1, 1, 1, 21, 13, 'DaChapNhan', NULL, 450000.00, '2026-05-02 08:45:00', '2026-05-02 10:00:00', NULL),
+	(2, 2, 1, 21, 13, 'HoanThanh', NULL, 450000.00, '2026-04-09 08:45:00', '2026-04-09 10:00:00', '2026-05-08 17:00:00'),
+	(3, 4, 1, 21, 3, 'TuChoi', 'Lich giam sat khong phu hop voi thoi gian thuc hien.', 450000.00, '2026-05-15 08:45:00', NULL, NULL),
+	(4, 5, 2, 21, 13, 'ChoDuyet', NULL, 450000.00, '2026-05-03 08:45:00', NULL, NULL)
+ON CONFLICT ("YCGiamSatID") DO NOTHING;
+
+-- ============================================================
+-- TIEN DO: Chua xac nhan, da xac nhan va tu choi
+-- ============================================================
+INSERT INTO "TienDo"
+	("TienDoID", "CongViecID", "TaiKhoanID", "TieuDe", "MoTa", "PhanTram", "TepDinhKem", "XacNhanBoi", "TrangThaiXacNhan", "NgayTao")
+VALUES
+	(1, 1, 13, 'Hoan thanh thiet ke database', 'Da tao schema va cac migration ban dau.', 30, 'uploads/progress/database-design.pdf', NULL, 'ChuaXacNhan', '2026-05-06 09:00:00'),
+	(2, 1, 13, 'API xac thuc va phan quyen', 'Da hoan thanh JWT va RBAC, duoc giam sat 21 xac nhan.', 55, 'uploads/progress/auth-api.pdf', 21, 'DaXacNhan', '2026-05-12 09:00:00'),
+	(3, 3, 13, 'Ban giao giao dien lan mot', 'Bi tu choi vi chua dung responsive breakpoint da thong nhat.', 45, 'uploads/progress/frontend-v1.zip', 21, 'TuChoi', '2026-05-18 09:00:00')
+ON CONFLICT ("TienDoID") DO NOTHING;
+
+-- ============================================================
+-- THANH TOAN: Du loai thanh toan, phuong thuc va trang thai
+-- ============================================================
+INSERT INTO "ThanhToan"
+	("ThanhToanID", "CongViecID", "TaiKhoanID", "SoTien", "LoaiTT", "PhuongThuc", "TrangThai", "GhiChu", "NgayTao")
+VALUES
+	(1, 1, 1, 32450000.00, 'DatCoc', 'Vi', 'ThanhCong', 'Escrow cho cong viec API dang thuc hien.', '2026-05-02 08:35:00'),
+	(2, 2, 1, 36450000.00, 'DatCoc', 'ChuyenKhoan', 'ThanhCong', 'Escrow du an backend e-commerce.', '2026-04-09 08:35:00'),
+	(3, 2, 1, 34200000.00, 'ThanhToanCuoi', 'Vi', 'ThanhCong', 'Chi tra cho freelancer 13 sau khi hoan thanh.', '2026-05-08 17:10:00'),
+	(4, 2, 1, 1800000.00, 'PhiHeThong', 'ThanhToanQuaMang', 'ThanhCong', 'Phi nen tang 5 phan tram.', '2026-05-08 17:11:00'),
+	(5, 2, 1, 450000.00, 'PhiGiamSat', 'TienMat', 'ThanhCong', 'Phi giam sat cho tai khoan 21.', '2026-05-08 17:12:00'),
+	(6, 3, 1, 9950000.00, 'DatCoc', 'Vi', 'DaHoan', 'Khoan escrow da hoan do tranh chap.', '2026-05-14 08:35:00'),
+	(7, 3, 1, 4500000.00, 'HoanTien', 'ChuyenKhoan', 'ThanhCong', 'Hoan tien mot phan theo ket luan giam sat.', '2026-05-23 16:00:00'),
+	(8, 4, 1, 38450000.00, 'DatCoc', 'ThanhToanQuaMang', 'ThatBai', 'Giao dich khong thanh cong truoc khi huy cong viec.', '2026-05-15 08:35:00'),
+	(9, 5, 2, 30450000.00, 'DatCoc', 'Vi', 'ChoXuLy', 'Cho nguoi thue xac nhan nap escrow.', '2026-05-03 08:35:00')
+ON CONFLICT ("ThanhToanID") DO NOTHING;
+
+-- ============================================================
+-- TRANH CHAP: Du trang thai, ket qua, ben chiu phi va loai bang chung
+-- ============================================================
+INSERT INTO "TranhChap"
+	("TranhChapID", "CongViecID", "NguoiGuiID", "GiamSatID", "LyDo", "MoTa", "TrangThai", "YeuCauHoanTien", "NgayMo", "NgayDong")
+VALUES
+	(1, 3, 1, 21, 'Cham tien do', 'Nguoi thue 1 yeu cau lam ro tien do ban giao frontend.', 'MoiMo', 3000000.00, '2026-05-18 08:00:00', NULL),
+	(2, 3, 13, 21, 'Khong thong nhat pham vi', 'Freelancer 13 gui bang chung de giam sat 21 xem xet.', 'DangXuLy', 0.00, '2026-05-19 08:00:00', NULL),
+	(3, 3, 1, 21, 'Can tiep tuc sau dieu chinh', 'Hai ben thong nhat tiep tuc khi cap nhat yeu cau.', 'DaKetLuan', 0.00, '2026-05-19 10:00:00', '2026-05-20 16:00:00'),
+	(4, 4, 1, 21, 'Huy truoc khi bat dau', 'Thanh toan that bai va nguoi thue muon dong vu viec.', 'DaDong', 38000000.00, '2026-05-16 08:00:00', '2026-05-17 16:00:00'),
+	(5, 3, 13, 21, 'Khong the tiep tuc hop dong', 'Can huy hop dong do bat dong nghiep vu.', 'DaKetLuan', 7000000.00, '2026-05-20 08:00:00', '2026-05-21 16:00:00'),
+	(6, 3, 1, 21, 'Phan chia chi phi dieu chinh', 'Hai ben chap nhan phan chia chi phi da thuc hien.', 'DaKetLuan', 4500000.00, '2026-05-21 08:00:00', '2026-05-23 16:00:00')
+ON CONFLICT ("TranhChapID") DO NOTHING;
+
+INSERT INTO "BangChungTranhChap"
+	("BangChungID", "TranhChapID", "NguoiNopID", "LoaiBangChung", "NoiDung", "DuongDanFile", "NgayNop")
+VALUES
+	(1, 1, 1, 'TinNhan', 'Tin nhan thong nhat deadline ban dau.', NULL, '2026-05-18 09:00:00'),
+	(2, 2, 13, 'File', 'Tai lieu mo ta pham vi da phe duyet.', 'uploads/evidence/scope-approved.pdf', '2026-05-19 09:00:00'),
+	(3, 2, 13, 'HinhAnh', 'Anh chup man hinh ket qua da ban giao.', 'uploads/evidence/delivery-screen.png', '2026-05-19 09:10:00'),
+	(4, 3, 21, 'GhiChu', 'Bien ban hoa giai cua don vi giam sat 21.', NULL, '2026-05-20 15:00:00'),
+	(5, 6, 1, 'KhacP', 'Bang tong hop chi phi phat sinh.', 'uploads/evidence/cost-summary.xlsx', '2026-05-22 09:00:00')
+ON CONFLICT ("BangChungID") DO NOTHING;
+
+INSERT INTO "KetLuanTranhChap"
+	("KetLuanID", "TranhChapID", "GiamSatID", "KetQua", "LyDo", "SoTienHoan", "BenChiuPhi", "NgayKetLuan")
+VALUES
+	(1, 3, 21, 'TiepTuc', 'Cap nhat lai pham vi va tiep tuc thuc hien.', 0.00, 'ChiaSe', '2026-05-20 16:00:00'),
+	(2, 4, 21, 'HoanTienNguoiThue', 'Cong viec chua bat dau va thanh toan khong thanh cong.', 38000000.00, 'NguoiThue', '2026-05-17 16:00:00'),
+	(3, 5, 21, 'HuyHopDong', 'Hai ben khong the tiep tuc phoi hop.', 7000000.00, 'Freelancer', '2026-05-21 16:00:00'),
+	(4, 6, 21, 'PhanChia', 'Cong viec da thuc hien mot phan va can chia se chi phi.', 4500000.00, 'HeThong', '2026-05-23 16:00:00')
+ON CONFLICT ("KetLuanID") DO NOTHING;
+
+-- ============================================================
+-- CHAT: Du trang thai hoi thoai va loai tin nhan
+-- ============================================================
+INSERT INTO "CuocHoiThoai"
+	("CuocHoiThoaiID", "CongViecID", "ThanhVien1ID", "ThanhVien2ID", "TinNhanCuoi", "TrangThai", "NgayTao")
+VALUES
+	(1, 1, 1, 13, '2026-05-20 10:10:00', 'DangMo', '2026-05-02 10:00:00'),
+	(2, 2, 1, 13, '2026-05-08 18:00:00', 'DaDong', '2026-04-10 10:00:00'),
+	(3, 3, 1, 21, '2026-05-22 11:00:00', 'DangMo', '2026-05-18 10:00:00')
+ON CONFLICT ("CuocHoiThoaiID") DO NOTHING;
+
+INSERT INTO "TinNhan"
+	("TinNhanID", "CuocHoiThoaiID", "NguoiGuiID", "NoiDung", "LoaiTin", "DaDoc", "NgayTao")
+VALUES
+	(1, 1, 1, 'Minh gui lai yeu cau API va deadline sprint dau.', 'VanBan', true, '2026-05-02 10:01:00'),
+	(2, 1, 13, 'Tai lieu API ban nhap.', 'File', true, '2026-05-12 10:00:00'),
+	(3, 1, 13, 'Anh chup man hinh dashboard monitoring.', 'HinhAnh', false, '2026-05-20 10:05:00'),
+	(4, 2, 1, 'Cam on ban da hoan thanh du an.', 'VanBan', true, '2026-05-08 18:00:00'),
+	(5, 3, 21, 'Don vi giam sat dang tong hop bang chung.', 'VanBan', false, '2026-05-22 11:00:00'),
+	(6, 1, 21, 'Toi da xac nhan moc API va se theo doi sprint tiep theo.', 'VanBan', false, '2026-05-20 10:10:00')
+ON CONFLICT ("TinNhanID") DO NOTHING;
+
+-- ============================================================
+-- DANH GIA: Du loai danh gia giua nguoi thue 1, freelancer 13 va giam sat 21
+-- ============================================================
+INSERT INTO "DanhGia"
+	("DanhGiaID", "CongViecID", "NguoiDanhGiaID", "NguoiDuocDGID", "DiemSo", "BinhLuan", "LoaiDanhGia", "NgayTao")
+VALUES
+	(1, 2, 1, 13, 5, 'Ban giao dung cam ket va giao tiep ro rang.', 'NguoiThue_DanhGia_Freelancer', '2026-05-09 09:00:00'),
+	(2, 2, 13, 1, 5, 'Nguoi thue phan hoi nhanh va yeu cau minh bach.', 'Freelancer_DanhGia_NguoiThue', '2026-05-09 09:05:00'),
+	(3, 2, 1, 21, 5, 'Giam sat ho tro xac nhan chat luong kip thoi.', 'NguoiThue_DanhGia_GiamSat', '2026-05-09 09:10:00'),
+	(4, 2, 13, 21, 4, 'Quy trinh giam sat ro rang va cong bang.', 'Freelancer_DanhGia_GiamSat', '2026-05-09 09:15:00'),
+	(5, 2, 21, 13, 5, 'Freelancer nop du bang chung va san pham dat yeu cau.', 'GiamSat_DanhGia_Freelancer', '2026-05-09 09:20:00'),
+	(6, 2, 21, 1, 5, 'Nguoi thue hop tac tot trong nghiem thu.', 'GiamSat_DanhGia_NguoiThue', '2026-05-09 09:25:00')
+ON CONFLICT ("DanhGiaID") DO NOTHING;
+
+-- ============================================================
+-- THONG BAO: Du cac loai thong bao cho nhom user demo
+-- ============================================================
+INSERT INTO "ThongBao"
+	("ThongBaoID", "TaiKhoanID", "TieuDe", "NoiDung", "LoaiThongBao", "DaDoc", "NgayTao")
+VALUES
+	(1, 1, 'Thong bao he thong', 'He thong da cap nhat chinh sach escrow.', 'HeThong', true, '2026-05-01 08:00:00'),
+	(2, 13, 'Yeu cau phu hop', 'Co yeu cau backend moi tu nguoi thue 1.', 'YeuCau', false, '2026-04-19 10:00:00'),
+	(3, 1, 'Bao gia moi', 'Freelancer 13 da gui bao gia cho yeu cau API.', 'BaoGia', true, '2026-04-20 08:01:00'),
+	(4, 13, 'Cong viec duoc tao', 'Bao gia cua ban da duoc chot thanh cong viec.', 'CongViec', true, '2026-05-02 08:31:00'),
+	(5, 21, 'Tranh chap can xu ly', 'Co tranh chap tu cong viec frontend can xem xet.', 'TranhChap', false, '2026-05-18 08:01:00'),
+	(6, 21, 'Moi giam sat', 'Ban duoc moi giam sat cong viec API.', 'GiamSat', true, '2026-05-02 08:46:00'),
+	(7, 1, 'Thanh toan escrow', 'Khoan dat coc da duoc giu an toan.', 'ThanhToan', true, '2026-05-02 08:36:00'),
+	(8, 13, 'Danh gia moi', 'Nguoi thue 1 da danh gia cong viec hoan thanh.', 'DanhGia', false, '2026-05-09 09:01:00')
+ON CONFLICT ("ThongBaoID") DO NOTHING;
+
+-- ============================================================
+-- BAO CAO: Du 4 trang thai xu ly
+-- ============================================================
+INSERT INTO "BaoCao"
+	("BaoCaoID", "NguoiBaoCaoID", "NguoiBiCaoID", "LyDo", "MoTa", "TrangThai", "KetQua", "AdminXuLyID", "NgayTao", "NgayXuLy")
+VALUES
+	(1, 1, 13, 'Cham phan hoi', 'Can admin kiem tra thoi gian phan hoi trong du an.', 'ChoXuLy', NULL, NULL, '2026-05-18 10:00:00', NULL),
+	(2, 13, 1, 'Yeu cau thay doi pham vi', 'Admin dang thu thap noi dung trao doi.', 'DangXuLy', NULL, 6, '2026-05-19 10:00:00', NULL),
+	(3, 1, 13, 'Bao cao da giai quyet', 'Hai ben da thong nhat cach tiep tuc.', 'DaXuLy', 'Khong ghi nhan vi pham; theo doi trong sprint tiep theo.', 6, '2026-05-20 10:00:00', '2026-05-21 10:00:00'),
+	(4, 13, 21, 'Bao cao nham', 'Nguoi gui xac nhan gui nham noi dung.', 'HuyBo', 'Bao cao duoc huy theo yeu cau nguoi gui.', 6, '2026-05-21 10:00:00', '2026-05-21 12:00:00')
+ON CONFLICT ("BaoCaoID") DO NOTHING;
+
 INSERT INTO "KhuyenMai"
 	("KhuyenMaiID", "MaCode", "LoaiGiam", "GiaTriGiam", "GiaTriToiDa", "SoLuotDung", "GioiHanLuot", "TrangThai", "NgayBatDau", "NgayKetThuc")
 VALUES
@@ -371,7 +525,7 @@ VALUES
 	(4, 'VIP20', 'PhanTram', 20.00, 2000000.00, 3, 30, 'HoatDong', '2026-04-01 00:00:00', '2026-12-31 23:59:59'),
 	(5, 'WEEKEND', 'PhanTram', 12.00, 800000.00, 8, 150, 'HoatDong', '2026-04-01 00:00:00', '2026-12-31 23:59:59'),
 	(6, 'FIRST100K', 'SoTienCo', 100000.00, 100000.00, 25, 100, 'HoatDong', '2026-04-01 00:00:00', '2026-06-30 23:59:59'),
-	(7, 'MEGA25', 'PhanTram', 25.00, 3000000.00, 2, 20, 'HoatDong', '2026-05-01 00:00:00', '2026-05-31 23:59:59'),
+	(7, 'MEGA25', 'PhanTram', 25.00, 3000000.00, 2, 20, 'ThuHoi', '2026-05-01 00:00:00', '2026-05-31 23:59:59'),
 	(8, 'SAVE200K', 'SoTienCo', 200000.00, 200000.00, 10, 50, 'HoatDong', '2026-04-10 00:00:00', '2026-07-10 23:59:59'),
 	(9, 'SPRING15', 'PhanTram', 15.00, 1500000.00, 7, 100, 'HetHan', '2026-03-01 00:00:00', '2026-03-31 23:59:59'),
 	(10, 'LOYAL30', 'PhanTram', 30.00, 5000000.00, 1, 10, 'HoatDong', '2026-04-01 00:00:00', '2026-12-31 23:59:59'),
@@ -406,6 +560,18 @@ SELECT setval(pg_get_serial_sequence('"DonViGiamSat"', 'GiamSatID'), COALESCE(MA
 SELECT setval(pg_get_serial_sequence('"KyNang"', 'KyNangID'), COALESCE(MAX("KyNangID"), 1), true) FROM "KyNang";
 SELECT setval(pg_get_serial_sequence('"YeuCau"', 'YeuCauID'), COALESCE(MAX("YeuCauID"), 1), true) FROM "YeuCau";
 SELECT setval(pg_get_serial_sequence('"BaoGia"', 'BaoGiaID'), COALESCE(MAX("BaoGiaID"), 1), true) FROM "BaoGia";
+SELECT setval(pg_get_serial_sequence('"CongViec"', 'CongViecID'), COALESCE(MAX("CongViecID"), 1), true) FROM "CongViec";
+SELECT setval(pg_get_serial_sequence('"YeuCauGiamSat"', 'YCGiamSatID'), COALESCE(MAX("YCGiamSatID"), 1), true) FROM "YeuCauGiamSat";
+SELECT setval(pg_get_serial_sequence('"TienDo"', 'TienDoID'), COALESCE(MAX("TienDoID"), 1), true) FROM "TienDo";
+SELECT setval(pg_get_serial_sequence('"ThanhToan"', 'ThanhToanID'), COALESCE(MAX("ThanhToanID"), 1), true) FROM "ThanhToan";
+SELECT setval(pg_get_serial_sequence('"TranhChap"', 'TranhChapID'), COALESCE(MAX("TranhChapID"), 1), true) FROM "TranhChap";
+SELECT setval(pg_get_serial_sequence('"BangChungTranhChap"', 'BangChungID'), COALESCE(MAX("BangChungID"), 1), true) FROM "BangChungTranhChap";
+SELECT setval(pg_get_serial_sequence('"KetLuanTranhChap"', 'KetLuanID'), COALESCE(MAX("KetLuanID"), 1), true) FROM "KetLuanTranhChap";
+SELECT setval(pg_get_serial_sequence('"CuocHoiThoai"', 'CuocHoiThoaiID'), COALESCE(MAX("CuocHoiThoaiID"), 1), true) FROM "CuocHoiThoai";
+SELECT setval(pg_get_serial_sequence('"TinNhan"', 'TinNhanID'), COALESCE(MAX("TinNhanID"), 1), true) FROM "TinNhan";
+SELECT setval(pg_get_serial_sequence('"DanhGia"', 'DanhGiaID'), COALESCE(MAX("DanhGiaID"), 1), true) FROM "DanhGia";
+SELECT setval(pg_get_serial_sequence('"ThongBao"', 'ThongBaoID'), COALESCE(MAX("ThongBaoID"), 1), true) FROM "ThongBao";
+SELECT setval(pg_get_serial_sequence('"BaoCao"', 'BaoCaoID'), COALESCE(MAX("BaoCaoID"), 1), true) FROM "BaoCao";
 SELECT setval(pg_get_serial_sequence('"KhuyenMai"', 'KhuyenMaiID'), COALESCE(MAX("KhuyenMaiID"), 1), true) FROM "KhuyenMai";
 
 COMMIT;

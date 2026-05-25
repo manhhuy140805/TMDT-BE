@@ -120,6 +120,7 @@ export class ProposalsService {
     payload: CreateProposalDto,
   ): Promise<ProposalMutationResponseDto> {
     await this.validateYeuCau(payload.yeuCauId);
+    await this.ensureYeuCauAcceptsProposals(payload.yeuCauId);
     await this.validateFreelancer(payload.freelancerId);
 
     if (payload.giaDeXuat <= 0) {
@@ -233,6 +234,17 @@ export class ProposalsService {
 
     if (!yeuCau) {
       throw new BadRequestException('Yeu cau khong ton tai');
+    }
+  }
+
+  private async ensureYeuCauAcceptsProposals(yeuCauId: number): Promise<void> {
+    const yeuCau = await this.prisma.yeuCau.findUnique({
+      where: { YeuCauID: yeuCauId },
+      select: { TrangThai: true },
+    });
+
+    if (yeuCau?.TrangThai !== 'DangNhanHoSo') {
+      throw new BadRequestException('Yeu cau khong con nhan ho so');
     }
   }
 

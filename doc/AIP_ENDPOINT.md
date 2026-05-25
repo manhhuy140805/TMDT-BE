@@ -97,7 +97,7 @@
 | GET | /contracts/:id/payments | Lay thanh toan cua hop dong |
 | GET | /contracts/:id/disputes | Lay tranh chap cua hop dong |
 | GET | /contracts/:id/reviews | Lay danh gia cua hop dong |
-| POST | /contracts | Tao hop dong |
+| POST | /contracts | Khong dung truc tiep; cong viec duoc tao khi chot bao gia |
 | PUT | /contracts/:id/status | Cap nhat trang thai hop dong |
 | POST | /contracts/:id/supervisor | Chon don vi giam sat |
 | PUT | /contracts/:id/supervisor/accept | Chap nhan giam sat |
@@ -187,7 +187,7 @@
 ### Contract Flow (Escrow)
 | Method | Path | Mo ta |
 |--------|------|-------|
-| POST | /contracts/accept-proposal | Chap nhan bao gia + tao hop dong + escrow |
+| POST | /contracts/accept-proposal | Chot freelancer (`DaChot`) + tao cong viec + escrow |
 | PUT | /contracts/:id/confirm-completion | Xac nhan hoan thanh (tung ben) |
 
 ### WebSocket - Realtime Chat

@@ -41,11 +41,10 @@ enum TrangThaiDonViGiamSat {
 }
 
 enum TrangThaiYeuCau {
-  MoDau
-  DangMo
+  DangNhanHoSo
   DaDong
+  DaChot
   DaHuy
-  HoanThanh
 }
 
 enum TrangThaiBaoGia {
@@ -331,7 +330,7 @@ model YeuCau {
   NganSachMin   Decimal         @default(0.00) @db.Decimal(15, 2)
   NganSachMax   Decimal         @default(0.00) @db.Decimal(15, 2)
   ThoiHan       DateTime        @db.Date
-  TrangThai     TrangThaiYeuCau @default(MoDau)
+  TrangThai     TrangThaiYeuCau @default(DangNhanHoSo)
   SoLuongBaoGia Int             @default(0)
   YeuCauGiamSat Boolean         @default(false)
   NgayTao       DateTime        @default(now()) @db.Timestamp(3)
