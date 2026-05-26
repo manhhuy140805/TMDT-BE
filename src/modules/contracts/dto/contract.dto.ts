@@ -13,7 +13,7 @@ export type ContractDto = {
   trangThai: TrangThaiCongViec;
   ngayBatDau: string | null;
   ngayKetThuc: string | null;
-  giamSatId: number | null;
+  giamSatId: number;
   trangThaiGiamSat: TrangThaiGiamSatCongViec;
   phiGiamSat: string;
   ngayTao: string;
@@ -38,11 +38,11 @@ export type ContractWithDetailsDto = ContractDto & {
     email: string;
   };
   giamSat: {
-    giamSatId: number | null;
+    giamSatId: number;
     taiKhoanId?: number;
     tenDonVi: string;
     email?: string;
-  } | null;
+  };
 };
 
 export type ContractsListResponseDto = {

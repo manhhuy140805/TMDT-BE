@@ -29,17 +29,32 @@ const CONVERSATION_SELECT = {
   TrangThai: true,
   NgayTao: true,
   ThanhVien1: {
-    select: { TaiKhoanID: true, HoTen: true, Email: true },
+    select: {
+      TaiKhoanID: true,
+      HoTen: true,
+      Email: true,
+      DonViGiamSat: { select: { TenDonVi: true } },
+    },
   },
   ThanhVien2: {
-    select: { TaiKhoanID: true, HoTen: true, Email: true },
+    select: {
+      TaiKhoanID: true,
+      HoTen: true,
+      Email: true,
+      DonViGiamSat: { select: { TenDonVi: true } },
+    },
   },
   CongViec: {
     select: {
       GiamSatID: true,
       TrangThaiGiamSat: true,
       GiamSat: {
-        select: { TaiKhoanID: true, HoTen: true, Email: true },
+        select: {
+          TaiKhoanID: true,
+          HoTen: true,
+          Email: true,
+          DonViGiamSat: { select: { TenDonVi: true } },
+        },
       },
     },
   },
@@ -54,7 +69,12 @@ const MESSAGE_SELECT = {
   DaDoc: true,
   NgayTao: true,
   NguoiGui: {
-    select: { TaiKhoanID: true, HoTen: true, Email: true },
+    select: {
+      TaiKhoanID: true,
+      HoTen: true,
+      Email: true,
+      DonViGiamSat: { select: { TenDonVi: true } },
+    },
   },
 } as const;
 
@@ -379,10 +399,11 @@ export class ChatService {
     TaiKhoanID: number;
     HoTen: string;
     Email: string;
+    DonViGiamSat: { TenDonVi: string } | null;
   }): MemberSummaryDto {
     return {
       taiKhoanId: member.TaiKhoanID,
-      hoTen: member.HoTen,
+      hoTen: member.DonViGiamSat?.TenDonVi ?? member.HoTen,
       email: member.Email,
     };
   }

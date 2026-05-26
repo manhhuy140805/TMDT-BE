@@ -17,7 +17,7 @@ export type JobDto = {
   trangThai: TrangThaiYeuCau;
   soLuongBaoGia: number;
   yeuCauGiamSat: boolean;
-  giamSatId: number | null;
+  giamSatId: number;
   ngayTao: string;
   ngayCapNhat: string;
 };
@@ -33,9 +33,9 @@ export type JobWithDetailsDto = JobDto & {
     tenLoai: string;
   };
   giamSat: {
-    giamSatId: number | null;
+    giamSatId: number;
     tenDonVi: string;
-  } | null;
+  };
   kyNangs: SkillSummaryDto[];
 };
 
@@ -56,22 +56,22 @@ export type CreateJobDto = {
   nganSachMin: number;
   nganSachMax: number;
   thoiHan: string;
-  yeuCauGiamSat?: boolean;
-  /** ID don vi giam sat (optional, set yeuCauGiamSat=true automatically) */
-  giamSatId?: number;
+  /** TaiKhoanID cua don vi giam sat bat buoc cho yeu cau */
+  giamSatId: number;
   /** Danh sach KyNangID yeu cau (optional) */
   kyNangIds?: number[];
 };
 
 export type UpdateJobDto = {
   loaiDichVuId?: number;
+  /** TaiKhoanID cua don vi giam sat thay the khi yeu cau chua chot */
+  giamSatId?: number;
   tieuDe?: string;
   moTa?: string;
   nganSachMin?: number;
   nganSachMax?: number;
   thoiHan?: string;
   trangThai?: TrangThaiYeuCau;
-  yeuCauGiamSat?: boolean;
 };
 
 export type JobMutationResponseDto = {

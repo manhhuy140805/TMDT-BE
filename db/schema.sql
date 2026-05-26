@@ -109,6 +109,7 @@ CREATE TABLE YeuCau (
     YeuCauID        INT             NOT NULL AUTO_INCREMENT,
     NguoiThueID     INT             NOT NULL,
     LoaiDichVuID    INT             NOT NULL,
+    GiamSatID       INT             NOT NULL,
     TieuDe          VARCHAR(200)    NOT NULL,
     MoTa            TEXT            NOT NULL,
     NganSachMin     DECIMAL(15,2)   NOT NULL DEFAULT 0.00,
@@ -117,8 +118,8 @@ CREATE TABLE YeuCau (
     TrangThai       ENUM('DangNhanHoSo','DaDong','DaChot','DaHuy')
                     NOT NULL DEFAULT 'DangNhanHoSo',
     SoLuongBaoGia   INT             NOT NULL DEFAULT 0,
-    YeuCauGiamSat   TINYINT(1)      NOT NULL DEFAULT 0
-                    COMMENT 'TRUE nếu công việc cần đơn vị giám sát (UC-41)',
+    YeuCauGiamSat   TINYINT(1)      NOT NULL DEFAULT 1
+                    COMMENT 'Luôn TRUE vì mọi yêu cầu đều có đơn vị giám sát',
     NgayTao         DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     NgayCapNhat     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
                     ON UPDATE CURRENT_TIMESTAMP,
@@ -126,7 +127,9 @@ CREATE TABLE YeuCau (
     CONSTRAINT fk_yc_nguoithue FOREIGN KEY (NguoiThueID)
         REFERENCES NguoiThue (NguoiThueID),
     CONSTRAINT fk_yc_loaidichvu FOREIGN KEY (LoaiDichVuID)
-        REFERENCES LoaiDichVu (LoaiDichVuID)
+        REFERENCES LoaiDichVu (LoaiDichVuID),
+    CONSTRAINT fk_yc_giamsat FOREIGN KEY (GiamSatID)
+        REFERENCES DonViGiamSat (GiamSatID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Yêu cầu thuê dịch vụ';
 
 -- ------------------------------------------------------------
@@ -166,10 +169,10 @@ CREATE TABLE CongViec (
     NgayBatDau          DATETIME        NULL,
     NgayKetThuc         DATETIME        NULL,
     -- Trường mới liên quan Supervisor
-    GiamSatID           INT             NULL
-                        COMMENT 'NULL nếu không có giám sát (UC-41)',
+    GiamSatID           INT             NOT NULL
+                        COMMENT 'Đơn vị giám sát bắt buộc cho công việc',
     TrangThaiGiamSat    ENUM('KhongCo','ChoDuyet','DangGiamSat',
-                             'HoanThanh','TuChoi') NOT NULL DEFAULT 'KhongCo',
+                             'HoanThanh','TuChoi') NOT NULL DEFAULT 'ChoDuyet',
     PhiGiamSat          DECIMAL(15,2)   NOT NULL DEFAULT 0.00,
     NgayTao             DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (CongViecID),
@@ -180,7 +183,7 @@ CREATE TABLE CongViec (
     CONSTRAINT fk_cv_nguoithue  FOREIGN KEY (NguoiThueID)
         REFERENCES NguoiThue (NguoiThueID),
     CONSTRAINT fk_cv_giamsat    FOREIGN KEY (GiamSatID)
-        REFERENCES DonViGiamSat (GiamSatID) ON DELETE SET NULL
+        REFERENCES DonViGiamSat (GiamSatID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Công việc đã ký kết';
 
 -- ------------------------------------------------------------
@@ -239,13 +242,13 @@ CREATE TABLE TienDo (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Cập nhật tiến độ công việc';
 
 -- ------------------------------------------------------------
--- 11. TRANH_CHAP  [MỚI - UC-27, UC-35]
+-- 11. TRANH_CHAP  [Chi mo sau khi cong viec hoan thanh]
 -- ------------------------------------------------------------
 CREATE TABLE TranhChap (
     TranhChapID         INT             NOT NULL AUTO_INCREMENT,
     CongViecID          INT             NOT NULL,
-    NguoiGuiID          INT             NOT NULL COMMENT 'TaiKhoanID người mở tranh chấp',
-    GiamSatID           INT             NULL     COMMENT 'Supervisor được chỉ định xử lý',
+    NguoiGuiID          INT             NOT NULL COMMENT 'TaiKhoanID khach hang khong hai long ket qua',
+    GiamSatID           INT             NOT NULL COMMENT 'Don vi giam sat cua cong viec xu ly',
     LyDo                VARCHAR(255)    NOT NULL,
     MoTa                TEXT            NULL,
     TrangThai           ENUM('MoiMo','DangXuLy','DaKetLuan','DaDong')
@@ -260,7 +263,7 @@ CREATE TABLE TranhChap (
         REFERENCES TaiKhoan (TaiKhoanID),
     CONSTRAINT fk_tc_giamsat  FOREIGN KEY (GiamSatID)
         REFERENCES DonViGiamSat (GiamSatID) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Tranh chấp giữa các bên';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Khieu nai ket qua sau khi cong viec hoan thanh';
 
 -- ------------------------------------------------------------
 -- 12. BANG_CHUNG_TRANH_CHAP  [MỚI - UC-36]

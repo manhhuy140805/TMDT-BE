@@ -1,9 +1,11 @@
 # API ENDPOINT TONG HOP
 
+> Tai lieu tra nhanh endpoint. Luong nghiep vu va payload hien hanh xem tai `doc/API_GUIDE.md`.
+
 ## Thong tin chung
 
-- Port mac dinh: `3000`
-- Base URL local: `http://localhost:3000`
+- Port mac dinh: `8080`
+- Base URL local: `http://localhost:8080`
 - Content-Type: `application/json`
 - Auth: Khong dung token, khong hash password (dev mode)
 
@@ -203,4 +205,4 @@
 | messagesRead | Server->Client | Ai do da doc tin nhan |
 | userTyping | Server->Client | Ai do dang go |
 
-WebSocket URL: `http://localhost:3000/chat?userId=1`
+WebSocket URL: `http://localhost:8080/chat?userId=1`

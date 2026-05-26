@@ -205,11 +205,10 @@ export class JobsService {
       await this.validateKyNangIds(kyNangIds);
     }
 
-    // Validate giamSatId if provided
-    const giamSatId = payload.giamSatId ?? null;
-    if (giamSatId) {
-      await this.validateGiamSat(giamSatId);
+    if (!payload.giamSatId) {
+      throw new BadRequestException('Yeu cau bat buoc co don vi giam sat');
     }
+    await this.validateGiamSat(payload.giamSatId);
 
     const job = await this.prisma.yeuCau.create({
       data: {
@@ -220,8 +219,8 @@ export class JobsService {
         NganSachMin: payload.nganSachMin,
         NganSachMax: payload.nganSachMax,
         ThoiHan: thoiHan,
-        YeuCauGiamSat: giamSatId ? true : (payload.yeuCauGiamSat ?? false),
-        GiamSatID: giamSatId,
+        YeuCauGiamSat: true,
+        GiamSatID: payload.giamSatId,
         TrangThai: 'DangNhanHoSo',
         YeuCauKyNangs:
           kyNangIds.length > 0
@@ -466,6 +465,17 @@ export class JobsService {
       data.LoaiDichVu = { connect: { LoaiDichVuID: payload.loaiDichVuId } };
     }
 
+    if (payload.giamSatId !== undefined) {
+      if (!['DangNhanHoSo', 'DaDong'].includes(currentStatus)) {
+        throw new BadRequestException(
+          'Chi co the doi don vi giam sat khi yeu cau chua chot',
+        );
+      }
+      await this.validateGiamSat(payload.giamSatId);
+      data.GiamSat = { connect: { TaiKhoanID: payload.giamSatId } };
+      data.YeuCauGiamSat = true;
+    }
+
     if (payload.tieuDe !== undefined) {
       data.TieuDe = this.requireText(payload.tieuDe, 'tieuDe');
     }
@@ -502,10 +512,6 @@ export class JobsService {
       data.TrangThai = payload.trangThai;
     }
 
-    if (payload.yeuCauGiamSat !== undefined) {
-      data.YeuCauGiamSat = payload.yeuCauGiamSat;
-    }
-
     if (Object.keys(data).length === 0) {
       throw new BadRequestException('Khong co truong hop le de cap nhat');
     }
@@ -514,6 +520,10 @@ export class JobsService {
   }
 
   private toJobWithDetailsDto(job: JobEntity): JobWithDetailsDto {
+    if (!job.GiamSat.DonViGiamSat) {
+      throw new BadRequestException('Yeu cau chua co don vi giam sat hop le');
+    }
+
     const kyNangs: SkillSummaryDto[] = job.YeuCauKyNangs.map((r) => ({
       kyNangId: r.KyNang.KyNangID,
       tenKyNang: r.KyNang.TenKyNang,
@@ -543,12 +553,10 @@ export class JobsService {
         loaiDichVuId: job.LoaiDichVu.LoaiDichVuID,
         tenLoai: job.LoaiDichVu.TenLoai,
       },
-      giamSat: job.GiamSat
-        ? {
-            giamSatId: job.GiamSat.TaiKhoanID,
-            tenDonVi: job.GiamSat.DonViGiamSat?.TenDonVi ?? job.GiamSat.HoTen,
-          }
-        : null,
+      giamSat: {
+        giamSatId: job.GiamSat.TaiKhoanID,
+        tenDonVi: job.GiamSat.DonViGiamSat.TenDonVi,
+      },
       kyNangs,
     };
   }

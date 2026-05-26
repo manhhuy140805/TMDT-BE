@@ -75,7 +75,6 @@ const TRANG_THAI_VALUES: readonly TrangThaiCongViec[] = [
   'DangThucHien',
   'HoanThanh',
   'DaHuy',
-  'TranhChap',
 ];
 
 @Injectable()
@@ -136,11 +135,12 @@ export class ContractsService {
     };
   }
 
-  async create(
-    _payload: CreateContractDto,
-  ): Promise<ContractMutationResponseDto> {
-    throw new BadRequestException(
-      'Cong viec chi duoc tao khi chot freelancer qua /contracts/accept-proposal',
+  create(_payload: CreateContractDto): Promise<ContractMutationResponseDto> {
+    void _payload;
+    return Promise.reject(
+      new BadRequestException(
+        'Cong viec chi duoc tao khi chot freelancer qua /contracts/accept-proposal',
+      ),
     );
   }
 
@@ -151,6 +151,19 @@ export class ContractsService {
     await this.findContractOrThrow(id);
 
     this.ensureValidTrangThai(payload.trangThai);
+
+    if (payload.trangThai !== 'HoanThanh') {
+      const dispute = await this.prisma.tranhChap.findFirst({
+        where: { CongViecID: id },
+        select: { TranhChapID: true },
+      });
+
+      if (dispute) {
+        throw new BadRequestException(
+          'Cong viec da co tranh chap ket qua phai giu trang thai hoan thanh',
+        );
+      }
+    }
 
     const data: Prisma.CongViecUpdateInput = {
       TrangThai: payload.trangThai,
@@ -232,6 +245,10 @@ export class ContractsService {
   private toContractWithDetailsDto(
     contract: ContractEntity,
   ): ContractWithDetailsDto {
+    if (!contract.GiamSat || !contract.GiamSat.DonViGiamSat) {
+      throw new BadRequestException('Hop dong chua co don vi giam sat');
+    }
+
     return {
       congViecId: contract.CongViecID,
       yeuCauId: contract.YeuCauID,
@@ -246,7 +263,7 @@ export class ContractsService {
       ngayKetThuc: contract.NgayKetThuc
         ? contract.NgayKetThuc.toISOString()
         : null,
-      giamSatId: contract.GiamSatID,
+      giamSatId: contract.GiamSatID!,
       trangThaiGiamSat: contract.TrangThaiGiamSat,
       phiGiamSat: contract.PhiGiamSat.toString(),
       ngayTao: contract.NgayTao.toISOString(),
@@ -267,15 +284,11 @@ export class ContractsService {
         hoTen: contract.NguoiThue.HoTen,
         email: contract.NguoiThue.Email,
       },
-      giamSat: contract.GiamSat
-        ? {
-            giamSatId: contract.GiamSat.TaiKhoanID,
-            taiKhoanId: contract.GiamSat.TaiKhoanID,
-            tenDonVi:
-              contract.GiamSat.DonViGiamSat?.TenDonVi ?? contract.GiamSat.HoTen,
-            email: contract.GiamSat.Email,
-          }
-        : null,
+      giamSat: {
+        giamSatId: contract.GiamSat.TaiKhoanID,
+        tenDonVi: contract.GiamSat.DonViGiamSat.TenDonVi,
+        email: contract.GiamSat.Email,
+      },
     };
   }
 
@@ -312,26 +325,38 @@ export class ContractsService {
       throw new BadRequestException('Phi giam sat phai lon hon hoac bang 0');
     }
 
-    // Create YeuCauGiamSat record
-    const yeuCauGiamSat = await this.prisma.yeuCauGiamSat.create({
-      data: {
-        CongViecID: id,
-        NguoiThueID: contract.NguoiThueID,
-        GiamSatID: payload.giamSatId,
-        FreelancerID: contract.FreelancerID,
-        PhiGiamSatThoa: payload.phiGiamSat,
-        TrangThai: 'ChoDuyet',
-      },
-    });
+    const yeuCauGiamSat = await this.prisma.$transaction(async (tx) => {
+      await tx.yeuCauGiamSat.updateMany({
+        where: { CongViecID: id, TrangThai: 'ChoDuyet' },
+        data: { TrangThai: 'TuChoi', LyDoTuChoi: 'Da chon don vi thay the' },
+      });
 
-    // Update contract with supervisor info
-    await this.prisma.congViec.update({
-      where: { CongViecID: id },
-      data: {
-        GiamSatID: payload.giamSatId,
-        PhiGiamSat: payload.phiGiamSat,
-        TrangThaiGiamSat: 'ChoDuyet',
-      },
+      const invitation = await tx.yeuCauGiamSat.create({
+        data: {
+          CongViecID: id,
+          NguoiThueID: contract.NguoiThueID,
+          GiamSatID: payload.giamSatId,
+          FreelancerID: contract.FreelancerID,
+          PhiGiamSatThoa: payload.phiGiamSat,
+          TrangThai: 'ChoDuyet',
+        },
+      });
+
+      await tx.yeuCau.update({
+        where: { YeuCauID: contract.YeuCauID },
+        data: { GiamSatID: payload.giamSatId, YeuCauGiamSat: true },
+      });
+
+      await tx.congViec.update({
+        where: { CongViecID: id },
+        data: {
+          GiamSatID: payload.giamSatId,
+          PhiGiamSat: payload.phiGiamSat,
+          TrangThaiGiamSat: 'ChoDuyet',
+        },
+      });
+
+      return invitation;
     });
 
     return {
@@ -412,13 +437,11 @@ export class ContractsService {
       },
     });
 
-    // Update contract - remove supervisor
+    // Giu don vi tren cong viec cho den khi nguoi thue chon don vi thay the.
     await this.prisma.congViec.update({
       where: { CongViecID: id },
       data: {
-        GiamSatID: null,
-        PhiGiamSat: 0,
-        TrangThaiGiamSat: 'KhongCo',
+        TrangThaiGiamSat: 'TuChoi',
       },
     });
 

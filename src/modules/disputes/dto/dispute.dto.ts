@@ -8,7 +8,7 @@ export type DisputeDto = {
   tranhChapId: number;
   congViecId: number;
   nguoiGuiId: number;
-  giamSatId: number | null;
+  giamSatId: number;
   lyDo: string;
   moTa: string | null;
   trangThai: TrangThaiTranhChap;

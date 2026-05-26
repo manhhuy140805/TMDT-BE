@@ -44,9 +44,7 @@ export class ContractsController {
   }
 
   @Get(':id')
-  findOne(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<ContractResponseDto> {
+  findOne(@Param('id', ParseIntPipe) id: number): Promise<ContractResponseDto> {
     return this.contractsService.findOne(id);
   }
 

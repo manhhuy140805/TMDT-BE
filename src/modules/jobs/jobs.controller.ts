@@ -109,9 +109,7 @@ export class JobsController {
 
   // DELETE /jobs/:id
   @Delete(':id')
-  remove(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<JobDeleteResponseDto> {
+  remove(@Param('id', ParseIntPipe) id: number): Promise<JobDeleteResponseDto> {
     return this.jobsService.remove(id);
   }
 }

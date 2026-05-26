@@ -31,6 +31,21 @@ const PROGRESS_SELECT = {
       CongViecID: true,
       YeuCauID: true,
       GiaThoa: true,
+      FreelancerID: true,
+      GiamSatID: true,
+      TrangThai: true,
+      TrangThaiGiamSat: true,
+      GiamSat: {
+        select: {
+          TaiKhoanID: true,
+          DonViGiamSat: {
+            select: {
+              TenDonVi: true,
+              TrangThai: true,
+            },
+          },
+        },
+      },
     },
   },
   NguoiTao: {
@@ -83,8 +98,10 @@ export class ProgressService {
   async create(
     payload: CreateProgressDto,
   ): Promise<ProgressMutationResponseDto> {
-    await this.validateCongViec(payload.congViecId);
-    await this.validateFreelancer(payload.freelancerId);
+    await this.validateProgressSubmission(
+      payload.congViecId,
+      payload.freelancerId,
+    );
 
     const tieuDe = this.requireText(payload.tieuDe, 'tieuDe');
 
@@ -115,9 +132,9 @@ export class ProgressService {
     id: number,
     payload: UpdateProgressDto,
   ): Promise<ProgressMutationResponseDto> {
-    await this.findProgressOrThrow(id);
+    const existing = await this.findProgressOrThrow(id);
 
-    const data = await this.buildUpdateData(payload);
+    const data = await this.buildUpdateData(existing, payload);
 
     const progress = await this.prisma.tienDo.update({
       where: { TienDoID: id },
@@ -168,20 +185,61 @@ export class ProgressService {
     }
   }
 
-  private async validateFreelancer(freelancerId: number): Promise<void> {
-    const taiKhoan = await this.prisma.taiKhoan.findUnique({
-      where: { TaiKhoanID: freelancerId },
-      select: { TaiKhoanID: true },
+  private async validateProgressSubmission(
+    congViecId: number,
+    freelancerId: number,
+  ): Promise<void> {
+    const congViec = await this.prisma.congViec.findUnique({
+      where: { CongViecID: congViecId },
+      select: {
+        FreelancerID: true,
+        TrangThai: true,
+        TrangThaiGiamSat: true,
+      },
     });
 
-    if (!taiKhoan) {
-      throw new BadRequestException('Freelancer khong ton tai');
+    if (!congViec) {
+      throw new BadRequestException('Hop dong khong ton tai');
+    }
+
+    if (congViec.FreelancerID !== freelancerId) {
+      throw new BadRequestException(
+        'Chi freelancer cua cong viec moi duoc gui tien do',
+      );
+    }
+
+    if (congViec.TrangThai !== 'DangThucHien') {
+      throw new BadRequestException(
+        'Chi co the gui tien do khi cong viec dang thuc hien',
+      );
+    }
+
+    if (congViec.TrangThaiGiamSat !== 'DangGiamSat') {
+      throw new BadRequestException(
+        'Don vi giam sat chua tiep nhan cong viec',
+      );
     }
   }
 
   private async buildUpdateData(
+    progress: ProgressEntity,
     payload: UpdateProgressDto,
   ): Promise<Prisma.TienDoUpdateInput> {
+    const editsSubmission =
+      payload.tieuDe !== undefined ||
+      payload.moTa !== undefined ||
+      payload.phanTram !== undefined ||
+      payload.tepDinhKem !== undefined;
+
+    if (
+      progress.TrangThaiXacNhan !== 'ChuaXacNhan' &&
+      (editsSubmission || payload.trangThaiXacNhan !== undefined)
+    ) {
+      throw new BadRequestException(
+        'Tien do da duoc don vi giam sat xu ly, khong the chinh sua',
+      );
+    }
+
     const data: Prisma.TienDoUpdateInput = {};
 
     if (payload.tieuDe !== undefined) {
@@ -205,7 +263,9 @@ export class ProgressService {
 
     if (payload.trangThaiXacNhan !== undefined) {
       this.ensureValidTrangThai(payload.trangThaiXacNhan);
+      await this.validateProgressReview(progress, payload);
       data.TrangThaiXacNhan = payload.trangThaiXacNhan;
+      data.XacNhanBoi = payload.xacNhanBoi!;
     }
 
     if (Object.keys(data).length === 0) {
@@ -240,8 +300,49 @@ export class ProgressService {
         hoTen: progress.NguoiTao.HoTen,
         email: progress.NguoiTao.Email,
       },
-      donViGiamSat: null,
+      donViGiamSat: progress.CongViec.GiamSat?.DonViGiamSat
+        ? {
+            giamSatId: progress.CongViec.GiamSat.TaiKhoanID,
+            tenDonVi: progress.CongViec.GiamSat.DonViGiamSat.TenDonVi,
+          }
+        : null,
     };
+  }
+
+  private async validateProgressReview(
+    progress: ProgressEntity,
+    payload: UpdateProgressDto,
+  ): Promise<void> {
+    if (
+      payload.trangThaiXacNhan !== 'DaXacNhan' &&
+      payload.trangThaiXacNhan !== 'TuChoi'
+    ) {
+      throw new BadRequestException(
+        'Tien do chi co the duoc don vi giam sat xac nhan hoac tu choi',
+      );
+    }
+
+    if (!payload.xacNhanBoi) {
+      throw new BadRequestException(
+        'xacNhanBoi la bat buoc khi duyet tien do',
+      );
+    }
+
+    if (
+      progress.CongViec.GiamSatID !== payload.xacNhanBoi ||
+      progress.CongViec.TrangThaiGiamSat !== 'DangGiamSat'
+    ) {
+      throw new BadRequestException(
+        'Chi don vi giam sat dang phu trach cong viec moi duoc duyet tien do',
+      );
+    }
+
+    if (
+      !progress.CongViec.GiamSat?.DonViGiamSat ||
+      progress.CongViec.GiamSat.DonViGiamSat.TrangThai !== 'HoatDong'
+    ) {
+      throw new BadRequestException('Don vi giam sat khong hoat dong');
+    }
   }
 
   private requireText(value: string | undefined, fieldName: string): string {

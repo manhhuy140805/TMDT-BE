@@ -55,6 +55,8 @@ export type UpdateProgressDto = {
   phanTram?: number;
   tepDinhKem?: string;
   trangThaiXacNhan?: TrangThaiXacNhanTienDo;
+  /** TaiKhoanID cua don vi giam sat khi duyet hoac tu choi tien do. */
+  xacNhanBoi?: number;
 };
 
 export type ProgressMutationResponseDto = {

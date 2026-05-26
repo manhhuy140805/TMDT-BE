@@ -324,7 +324,7 @@ model YeuCau {
   YeuCauID      Int             @id @default(autoincrement())
   TaiKhoanID    Int             // Nguoi tao yeu cau (NguoiThue)
   LoaiDichVuID  Int
-  GiamSatID     Int?            // TaiKhoanID cua don vi giam sat (optional)
+  GiamSatID     Int             // TaiKhoanID cua don vi giam sat
   TieuDe        String          @db.VarChar(200)
   MoTa          String          @db.Text
   NganSachMin   Decimal         @default(0.00) @db.Decimal(15, 2)
@@ -332,12 +332,12 @@ model YeuCau {
   ThoiHan       DateTime        @db.Date
   TrangThai     TrangThaiYeuCau @default(DangNhanHoSo)
   SoLuongBaoGia Int             @default(0)
-  YeuCauGiamSat Boolean         @default(false)
+  YeuCauGiamSat Boolean         @default(true)
   NgayTao       DateTime        @default(now()) @db.Timestamp(3)
   NgayCapNhat   DateTime        @updatedAt @db.Timestamp(3)
 
   NguoiTao      TaiKhoan       @relation("YeuCauNguoiTao", fields: [TaiKhoanID], references: [TaiKhoanID])
-  GiamSat       TaiKhoan?      @relation("YeuCauGiamSat", fields: [GiamSatID], references: [TaiKhoanID])
+  GiamSat       TaiKhoan       @relation("YeuCauGiamSat", fields: [GiamSatID], references: [TaiKhoanID])
   LoaiDichVu    LoaiDichVu     @relation(fields: [LoaiDichVuID], references: [LoaiDichVuID])
   BaoGias       BaoGia[]
   CongViecs     CongViec[]
@@ -372,13 +372,13 @@ model CongViec {
   YeuCauID            Int
   FreelancerID        Int                      // TaiKhoanID cua freelancer
   NguoiThueID         Int                      // TaiKhoanID cua nguoi thue
-  GiamSatID           Int?                     // TaiKhoanID cua giam sat
+  GiamSatID           Int                      // TaiKhoanID cua giam sat
   GiaThoa             Decimal                  @db.Decimal(15, 2)
   ThoiGianThoa        Int
   TrangThai           TrangThaiCongViec        @default(MoiTao)
   NgayBatDau          DateTime?                @db.Timestamp(3)
   NgayKetThuc         DateTime?                @db.Timestamp(3)
-  TrangThaiGiamSat    TrangThaiGiamSatCongViec @default(KhongCo)
+  TrangThaiGiamSat    TrangThaiGiamSatCongViec @default(ChoDuyet)
   PhiGiamSat          Decimal                  @default(0.00) @db.Decimal(15, 2)
   FreelancerXacNhan   Boolean                  @default(false)
   GiamSatXacNhan      Boolean                  @default(false)
@@ -389,7 +389,7 @@ model CongViec {
   YeuCau         YeuCau          @relation(fields: [YeuCauID], references: [YeuCauID])
   Freelancer     TaiKhoan        @relation("CongViecFreelancer", fields: [FreelancerID], references: [TaiKhoanID])
   NguoiThue      TaiKhoan        @relation("CongViecNguoiThue", fields: [NguoiThueID], references: [TaiKhoanID])
-  GiamSat        TaiKhoan?       @relation("CongViecGiamSat", fields: [GiamSatID], references: [TaiKhoanID])
+  GiamSat        TaiKhoan        @relation("CongViecGiamSat", fields: [GiamSatID], references: [TaiKhoanID])
   YeuCauGiamSats YeuCauGiamSat[]
   TienDos        TienDo[]
   TranhChaps     TranhChap[]
@@ -466,7 +466,7 @@ model TranhChap {
   TranhChapID    Int                @id @default(autoincrement())
   CongViecID     Int
   NguoiGuiID     Int                // TaiKhoanID nguoi mo tranh chap
-  GiamSatID      Int?               // TaiKhoanID giam sat xu ly
+  GiamSatID      Int                // TaiKhoanID giam sat cua cong viec xu ly
   LyDo           String             @db.VarChar(255)
   MoTa           String?            @db.Text
   TrangThai      TrangThaiTranhChap @default(MoiMo)

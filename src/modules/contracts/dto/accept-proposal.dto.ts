@@ -1,8 +1,6 @@
 export type AcceptProposalDto = {
   baoGiaId: number;
   nguoiThueId: number;
-  /** Optional: supervisor ID if job requires supervision */
-  giamSatId?: number;
   phiGiamSat?: number;
 };
 

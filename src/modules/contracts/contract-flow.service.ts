@@ -61,8 +61,25 @@ export class ContractFlowService {
       throw new BadRequestException('Yeu cau khong the chot freelancer');
     }
 
+    const supervisorProfile = await this.prisma.donViGiamSat.findFirst({
+      where: { TaiKhoanID: baoGia.YeuCau.GiamSatID },
+      select: { GiamSatID: true, TrangThai: true },
+    });
+
+    if (!supervisorProfile) {
+      throw new BadRequestException('Don vi giam sat khong ton tai');
+    }
+
+    if (supervisorProfile.TrangThai !== 'HoatDong') {
+      throw new BadRequestException('Don vi giam sat khong hoat dong');
+    }
+
     const giaThoa = Number(baoGia.GiaDeXuat);
     const phiGiamSat = payload.phiGiamSat ?? 0;
+
+    if (phiGiamSat < 0) {
+      throw new BadRequestException('Phi giam sat phai lon hon hoac bang 0');
+    }
     const tongThanhToan = giaThoa + phiGiamSat;
 
     // Transaction: create contract + escrow payment + update statuses
@@ -90,8 +107,8 @@ export class ContractFlowService {
           ThoiGianThoa: baoGia.ThoiGianThucHien,
           TrangThai: 'DangThucHien',
           NgayBatDau: new Date(),
-          GiamSatID: payload.giamSatId ?? null,
-          TrangThaiGiamSat: payload.giamSatId ? 'ChoDuyet' : 'KhongCo',
+          GiamSatID: baoGia.YeuCau.GiamSatID,
+          TrangThaiGiamSat: 'ChoDuyet',
           PhiGiamSat: phiGiamSat,
           DaThanhToanEscrow: true,
         },
@@ -110,13 +127,25 @@ export class ContractFlowService {
         },
       });
 
-      // 3. Cap nhat bao gia duoc chon
+      // 3. Tao loi moi giam sat tu don vi da gan tren yeu cau.
+      await tx.yeuCauGiamSat.create({
+        data: {
+          CongViecID: congViec.CongViecID,
+          NguoiThueID: payload.nguoiThueId,
+          GiamSatID: baoGia.YeuCau.GiamSatID,
+          FreelancerID: baoGia.TaiKhoanID,
+          PhiGiamSatThoa: phiGiamSat,
+          TrangThai: 'ChoDuyet',
+        },
+      });
+
+      // 4. Cap nhat bao gia duoc chon
       await tx.baoGia.update({
         where: { BaoGiaID: payload.baoGiaId },
         data: { TrangThai: 'DuocChon' },
       });
 
-      // 4. Tu choi cac bao gia khac cua cung yeu cau
+      // 5. Tu choi cac bao gia khac cua cung yeu cau
       await tx.baoGia.updateMany({
         where: {
           YeuCauID: baoGia.YeuCauID,
@@ -186,13 +215,14 @@ export class ContractFlowService {
       if (congViec.GiamSatXacNhan) {
         throw new BadRequestException('Giam sat da xac nhan roi');
       }
+      await this.validateSupervisorApprovedFinalDelivery(congViec);
       updateData.GiamSatXacNhan = true;
     } else if (payload.role === 'NguoiThue') {
       // Nguoi thue chi duoc xac nhan khi freelancer + giam sat da xac nhan
       if (!congViec.FreelancerXacNhan) {
         throw new BadRequestException('Freelancer chua xac nhan hoan thanh');
       }
-      if (congViec.GiamSatID && !congViec.GiamSatXacNhan) {
+      if (!congViec.GiamSatXacNhan) {
         throw new BadRequestException('Giam sat chua xac nhan hoan thanh');
       }
       if (congViec.NguoiThueXacNhan) {
@@ -259,15 +289,32 @@ export class ContractFlowService {
   }
 
   private isAllConfirmed(congViec: any): boolean {
-    // Neu khong co giam sat, chi can freelancer + nguoi thue
-    if (!congViec.GiamSatID) {
-      return congViec.FreelancerXacNhan && congViec.NguoiThueXacNhan;
-    }
     return (
       congViec.FreelancerXacNhan &&
       congViec.GiamSatXacNhan &&
       congViec.NguoiThueXacNhan
     );
+  }
+
+  private async validateSupervisorApprovedFinalDelivery(congViec: {
+    CongViecID: number;
+    GiamSatID: number;
+  }): Promise<void> {
+    const approvedFinalDelivery = await this.prisma.tienDo.findFirst({
+      where: {
+        CongViecID: congViec.CongViecID,
+        PhanTram: 100,
+        TrangThaiXacNhan: 'DaXacNhan',
+        XacNhanBoi: congViec.GiamSatID,
+      },
+      select: { TienDoID: true },
+    });
+
+    if (!approvedFinalDelivery) {
+      throw new BadRequestException(
+        'Don vi giam sat phai duyet chat luong ban giao 100 phan tram truoc khi xac nhan hoan thanh',
+      );
+    }
   }
 
   private async releaseEscrow(congViec: any) {
@@ -300,7 +347,7 @@ export class ContractFlowService {
       });
 
       // 3. Tao thanh toan phi giam sat (neu co)
-      if (phiGiamSat > 0 && congViec.GiamSatID) {
+      if (phiGiamSat > 0) {
         await tx.thanhToan.create({
           data: {
             CongViecID: congViec.CongViecID,

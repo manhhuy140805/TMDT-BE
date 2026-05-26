@@ -73,38 +73,52 @@ export class DisputesService {
       throw new NotFoundException('Hop dong khong ton tai');
     }
 
-    // Determine if the sender is part of this contract
-    const isFreelancer = contract.FreelancerID === payload.nguoiGuiId;
-    const isNguoiThue = contract.NguoiThueID === payload.nguoiGuiId;
-
-    // Check account existence for sender ID
-    const nguoiGui = await this.prisma.taiKhoan.findUnique({
-      where: { TaiKhoanID: payload.nguoiGuiId },
-    });
-
-    if (!nguoiGui) {
-      throw new BadRequestException('Nguoi gui khong ton tai');
+    if (contract.TrangThai !== 'HoanThanh') {
+      throw new BadRequestException(
+        'Chi co the tranh chap sau khi cong viec da hoan thanh',
+      );
     }
 
-    // Create the dispute
+    if (contract.NguoiThueID !== payload.nguoiGuiId) {
+      throw new BadRequestException(
+        'Chi khach hang moi co the mo tranh chap ve ket qua cong viec',
+      );
+    }
+
+    const activeDispute = await this.prisma.tranhChap.findFirst({
+      where: {
+        CongViecID: payload.congViecId,
+        TrangThai: { in: ['MoiMo', 'DangXuLy'] },
+      },
+      select: { TranhChapID: true },
+    });
+
+    if (activeDispute) {
+      throw new BadRequestException('Cong viec dang co tranh chap can xu ly');
+    }
+
+    const lyDo = payload.lyDo?.trim();
+    if (!lyDo) {
+      throw new BadRequestException('Ly do tranh chap la bat buoc');
+    }
+
+    if (payload.yeuCauHoanTien < 0) {
+      throw new BadRequestException(
+        'Yeu cau hoan tien phai lon hon hoac bang 0',
+      );
+    }
+
     const dispute = await this.prisma.tranhChap.create({
       data: {
         CongViecID: payload.congViecId,
         NguoiGuiID: payload.nguoiGuiId,
-        LyDo: payload.lyDo,
-        MoTa: payload.moTa,
+        GiamSatID: contract.GiamSatID,
+        LyDo: lyDo,
+        MoTa: payload.moTa?.trim() || null,
         YeuCauHoanTien: payload.yeuCauHoanTien,
         TrangThai: 'MoiMo',
       },
       select: DISPUTE_SELECT,
-    });
-
-    // Update contract status to TranhChap
-    await this.prisma.congViec.update({
-      where: { CongViecID: payload.congViecId },
-      data: {
-        TrangThai: 'TranhChap',
-      },
     });
 
     return {
@@ -129,13 +143,18 @@ export class DisputesService {
       throw new BadRequestException('Khong the xu ly tranh chap o trang thai hien tai');
     }
 
-    // Verify supervisor (giamSatId is now TaiKhoanID)
+    if (dispute.GiamSatID !== payload.giamSatId) {
+      throw new BadRequestException(
+        'Chi don vi giam sat cua cong viec moi duoc xu ly tranh chap',
+      );
+    }
+
     const supervisor = await this.prisma.donViGiamSat.findFirst({
-      where: { TaiKhoanID: payload.giamSatId },
+      where: { TaiKhoanID: payload.giamSatId, TrangThai: 'HoatDong' },
     });
 
     if (!supervisor) {
-      throw new BadRequestException('Don vi giam sat khong ton tai');
+      throw new BadRequestException('Don vi giam sat khong hoat dong');
     }
 
     const updatedDispute = await this.prisma.tranhChap.update({
@@ -210,7 +229,7 @@ export class DisputesService {
       tranhChapId: dispute.TranhChapID,
       congViecId: dispute.CongViecID,
       nguoiGuiId: dispute.NguoiGuiID,
-      giamSatId: dispute.GiamSatID,
+      giamSatId: dispute.GiamSatID!,
       lyDo: dispute.LyDo,
       moTa: dispute.MoTa,
       trangThai: dispute.TrangThai,
