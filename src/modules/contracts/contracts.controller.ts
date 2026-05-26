@@ -16,8 +16,6 @@ import type {
   ContractResponseDto,
   ContractsListResponseDto,
   CreateContractDto,
-  SelectSupervisorDto,
-  SupervisorResponseDto,
   UpdateContractStatusDto,
 } from './dto/contract.dto';
 import type {
@@ -82,28 +80,6 @@ export class ContractsController {
     @Body() payload: UpdateContractStatusDto,
   ): Promise<ContractMutationResponseDto> {
     return this.contractsService.updateStatus(id, payload);
-  }
-
-  @Post(':id/supervisor')
-  selectSupervisor(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() payload: SelectSupervisorDto,
-  ): Promise<SupervisorResponseDto> {
-    return this.contractsService.selectSupervisor(id, payload);
-  }
-
-  @Put(':id/supervisor/accept')
-  acceptSupervisor(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<SupervisorResponseDto> {
-    return this.contractsService.acceptSupervisor(id);
-  }
-
-  @Put(':id/supervisor/reject')
-  rejectSupervisor(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<SupervisorResponseDto> {
-    return this.contractsService.rejectSupervisor(id);
   }
 
   // --- Contract Flow: Accept Proposal + Escrow + Confirm Completion ---

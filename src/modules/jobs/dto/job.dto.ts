@@ -1,4 +1,4 @@
-import type { TrangThaiYeuCau } from '@prisma/client';
+import type { TrangThaiYeuCau, TrangThaiYeuCauGiamSat } from '@prisma/client';
 
 export type SkillSummaryDto = {
   kyNangId: number;
@@ -18,6 +18,9 @@ export type JobDto = {
   soLuongBaoGia: number;
   yeuCauGiamSat: boolean;
   giamSatId: number;
+  trangThaiGiamSat: TrangThaiYeuCauGiamSat;
+  lyDoTuChoiGiamSat: string | null;
+  ngayGiamSatChapNhan: string | null;
   ngayTao: string;
   ngayCapNhat: string;
 };
@@ -77,6 +80,10 @@ export type UpdateJobDto = {
 export type JobMutationResponseDto = {
   message: string;
   job: JobWithDetailsDto;
+};
+
+export type RejectJobSupervisorDto = {
+  lyDo: string;
 };
 
 export type JobDeleteResponseDto = {

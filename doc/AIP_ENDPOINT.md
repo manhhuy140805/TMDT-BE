@@ -11,7 +11,7 @@
 
 ---
 
-## Danh sach endpoint (88 endpoints)
+## Danh sach endpoint (92 endpoints)
 
 ### Health
 | Method | Path | Mo ta |
@@ -66,6 +66,8 @@
 | GET | /jobs/:id/skills | Lay ky nang yeu cau |
 | POST | /jobs | Tao yeu cau moi |
 | PUT | /jobs/:id | Cap nhat yeu cau |
+| PUT | /jobs/:id/supervisor/accept | Don vi giam sat chap nhan yeu cau |
+| PUT | /jobs/:id/supervisor/reject | Don vi giam sat tu choi yeu cau |
 | PUT | /jobs/:id/skills | Thay the toan bo ky nang yeu cau |
 | POST | /jobs/:id/skills/:kyNangId | Them 1 ky nang vao yeu cau |
 | DELETE | /jobs/:id/skills/:kyNangId | Xoa 1 ky nang khoi yeu cau |
@@ -97,13 +99,11 @@
 | GET | /contracts/:id/progress | Lay tien do cua hop dong |
 | GET | /contracts/:id/conversations | Lay cuoc hoi thoai cua hop dong |
 | GET | /contracts/:id/payments | Lay thanh toan cua hop dong |
+| GET | /contracts/:id/refund-requests | Lay yeu cau hoan tien cua hop dong |
 | GET | /contracts/:id/disputes | Lay tranh chap cua hop dong |
 | GET | /contracts/:id/reviews | Lay danh gia cua hop dong |
 | POST | /contracts | Khong dung truc tiep; cong viec duoc tao khi chot bao gia |
 | PUT | /contracts/:id/status | Cap nhat trang thai hop dong |
-| POST | /contracts/:id/supervisor | Chon don vi giam sat |
-| PUT | /contracts/:id/supervisor/accept | Chap nhan giam sat |
-| PUT | /contracts/:id/supervisor/reject | Tu choi giam sat |
 
 ### Supervisors (Don vi giam sat)
 | Method | Path | Mo ta |
@@ -148,6 +148,15 @@
 | GET | /disputes/:id | Lay chi tiet tranh chap |
 | PUT | /disputes/:id/review | Giam sat xem xet |
 | PUT | /disputes/:id/resolve | Giam sat giai quyet |
+
+### Refund Requests (Yeu cau hoan tien)
+| Method | Path | Mo ta |
+|--------|------|-------|
+| POST | /refund-requests | Nguoi thue gui yeu cau cho freelancer |
+| GET | /refund-requests/:id | Lay chi tiet yeu cau hoan tien |
+| GET | /contracts/:id/refund-requests | Lay yeu cau theo hop dong |
+| PUT | /refund-requests/:id/accept | Freelancer dong y va he thong hoan/phat tien |
+| PUT | /refund-requests/:id/reject | Freelancer tu choi va tu mo tranh chap |
 
 ### Evidences (Bang chung)
 | Method | Path | Mo ta |

@@ -13,6 +13,7 @@ import type {
   JobSkillsMutationResponseDto,
   JobsListResponseDto,
   JobWithDetailsDto,
+  RejectJobSupervisorDto,
   SearchJobsQueryDto,
   SetJobSkillsDto,
   SkillSummaryDto,
@@ -32,6 +33,9 @@ const JOB_SELECT = {
   TrangThai: true,
   SoLuongBaoGia: true,
   YeuCauGiamSat: true,
+  TrangThaiGiamSat: true,
+  LyDoTuChoiGiamSat: true,
+  NgayGiamSatChapNhan: true,
   NgayTao: true,
   NgayCapNhat: true,
   NguoiTao: {
@@ -222,6 +226,7 @@ export class JobsService {
         YeuCauGiamSat: true,
         GiamSatID: payload.giamSatId,
         TrangThai: 'DangNhanHoSo',
+        TrangThaiGiamSat: 'ChoDuyet',
         YeuCauKyNangs:
           kyNangIds.length > 0
             ? {
@@ -271,6 +276,92 @@ export class JobsService {
 
     return {
       message: 'Cap nhat yeu cau thanh cong',
+      job: this.toJobWithDetailsDto(job),
+    };
+  }
+
+  async acceptSupervisor(id: number): Promise<JobMutationResponseDto> {
+    const currentJob = await this.findJobOrThrow(id);
+
+    if (currentJob.TrangThai === 'DaChot' || currentJob.TrangThai === 'DaHuy') {
+      throw new BadRequestException(
+        'Khong the phe duyet giam sat cho yeu cau da chot hoac da huy',
+      );
+    }
+
+    if (currentJob.TrangThaiGiamSat !== 'ChoDuyet') {
+      throw new BadRequestException(
+        'Yeu cau giam sat khong o trang thai cho duyet',
+      );
+    }
+
+    await this.validateGiamSat(currentJob.GiamSatID);
+
+    const updated = await this.prisma.yeuCau.updateMany({
+      where: {
+        YeuCauID: id,
+        TrangThaiGiamSat: 'ChoDuyet',
+      },
+      data: {
+        TrangThaiGiamSat: 'DaChapNhan',
+        LyDoTuChoiGiamSat: null,
+        NgayGiamSatChapNhan: new Date(),
+      },
+    });
+
+    if (updated.count !== 1) {
+      throw new BadRequestException(
+        'Trang thai giam sat da thay doi, vui long thu lai',
+      );
+    }
+
+    const job = await this.findJobOrThrow(id);
+    return {
+      message: 'Chap nhan giam sat yeu cau thanh cong',
+      job: this.toJobWithDetailsDto(job),
+    };
+  }
+
+  async rejectSupervisor(
+    id: number,
+    payload: RejectJobSupervisorDto,
+  ): Promise<JobMutationResponseDto> {
+    const currentJob = await this.findJobOrThrow(id);
+    const lyDo = this.requireText(payload.lyDo, 'lyDo');
+
+    if (currentJob.TrangThai === 'DaChot' || currentJob.TrangThai === 'DaHuy') {
+      throw new BadRequestException(
+        'Khong the tu choi giam sat cho yeu cau da chot hoac da huy',
+      );
+    }
+
+    if (currentJob.TrangThaiGiamSat !== 'ChoDuyet') {
+      throw new BadRequestException(
+        'Yeu cau giam sat khong o trang thai cho duyet',
+      );
+    }
+
+    const updated = await this.prisma.yeuCau.updateMany({
+      where: {
+        YeuCauID: id,
+        TrangThaiGiamSat: 'ChoDuyet',
+      },
+      data: {
+        TrangThaiGiamSat: 'TuChoi',
+        LyDoTuChoiGiamSat: lyDo,
+        NgayGiamSatChapNhan: null,
+      },
+    });
+
+    if (updated.count !== 1) {
+      throw new BadRequestException(
+        'Trang thai giam sat da thay doi, vui long thu lai',
+      );
+    }
+
+    const job = await this.findJobOrThrow(id);
+    return {
+      message: 'Tu choi giam sat yeu cau thanh cong',
       job: this.toJobWithDetailsDto(job),
     };
   }
@@ -474,6 +565,9 @@ export class JobsService {
       await this.validateGiamSat(payload.giamSatId);
       data.GiamSat = { connect: { TaiKhoanID: payload.giamSatId } };
       data.YeuCauGiamSat = true;
+      data.TrangThaiGiamSat = 'ChoDuyet';
+      data.LyDoTuChoiGiamSat = null;
+      data.NgayGiamSatChapNhan = null;
     }
 
     if (payload.tieuDe !== undefined) {
@@ -542,6 +636,9 @@ export class JobsService {
       soLuongBaoGia: job.SoLuongBaoGia,
       yeuCauGiamSat: job.YeuCauGiamSat,
       giamSatId: job.GiamSatID,
+      trangThaiGiamSat: job.TrangThaiGiamSat,
+      lyDoTuChoiGiamSat: job.LyDoTuChoiGiamSat,
+      ngayGiamSatChapNhan: job.NgayGiamSatChapNhan?.toISOString() ?? null,
       ngayTao: job.NgayTao.toISOString(),
       ngayCapNhat: job.NgayCapNhat.toISOString(),
       nguoiThue: {

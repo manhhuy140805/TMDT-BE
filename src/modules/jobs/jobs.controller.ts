@@ -19,6 +19,7 @@ import type {
   JobResponseDto,
   JobSkillsMutationResponseDto,
   JobsListResponseDto,
+  RejectJobSupervisorDto,
   SearchJobsQueryDto,
   SetJobSkillsDto,
   UpdateJobDto,
@@ -78,6 +79,21 @@ export class JobsController {
     @Body() payload: UpdateJobDto,
   ): Promise<JobMutationResponseDto> {
     return this.jobsService.update(id, payload);
+  }
+
+  @Put(':id/supervisor/accept')
+  acceptSupervisor(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<JobMutationResponseDto> {
+    return this.jobsService.acceptSupervisor(id);
+  }
+
+  @Put(':id/supervisor/reject')
+  rejectSupervisor(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() payload: RejectJobSupervisorDto,
+  ): Promise<JobMutationResponseDto> {
+    return this.jobsService.rejectSupervisor(id, payload);
   }
 
   // PUT /jobs/:id/skills  — thay thế toàn bộ danh sách kỹ năng

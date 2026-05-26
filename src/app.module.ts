@@ -19,6 +19,7 @@ import { ChatModule } from './modules/chat/chat.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { RefundRequestsModule } from './modules/refund-requests/refund-requests.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { AdminModule } from './modules/admin/admin.module';
     ProgressModule,
     RecommendationsModule,
     PaymentsModule,
+    RefundRequestsModule,
     DisputesModule,
     EvidencesModule,
     ReviewsModule,

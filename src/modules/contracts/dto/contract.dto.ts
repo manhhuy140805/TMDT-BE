@@ -70,14 +70,3 @@ export type ContractMutationResponseDto = {
   message: string;
   contract: ContractWithDetailsDto;
 };
-
-export type SelectSupervisorDto = {
-  giamSatId: number;
-  phiGiamSat: number;
-};
-
-export type SupervisorResponseDto = {
-  message: string;
-  yeuCauGiamSatId: number;
-  trangThai: string;
-};

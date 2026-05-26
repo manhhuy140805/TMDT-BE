@@ -240,11 +240,17 @@ export class ProposalsService {
   private async ensureYeuCauAcceptsProposals(yeuCauId: number): Promise<void> {
     const yeuCau = await this.prisma.yeuCau.findUnique({
       where: { YeuCauID: yeuCauId },
-      select: { TrangThai: true },
+      select: { TrangThai: true, TrangThaiGiamSat: true },
     });
 
     if (yeuCau?.TrangThai !== 'DangNhanHoSo') {
       throw new BadRequestException('Yeu cau khong con nhan ho so');
+    }
+
+    if (yeuCau.TrangThaiGiamSat !== 'DaChapNhan') {
+      throw new BadRequestException(
+        'Don vi giam sat chua phe duyet yeu cau nay, khong the gui bao gia',
+      );
     }
   }
 

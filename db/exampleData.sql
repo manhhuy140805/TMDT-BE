@@ -25,6 +25,7 @@ TRUNCATE TABLE
 	"TienDo",
 	"TinNhan",
 	"TranhChap",
+	"YeuCauHoanTien",
 	"YeuCau",
 	"YeuCauGiamSat",
 	"YeuCauKyNang"
@@ -173,6 +174,38 @@ VALUES
 	(33, 1, 6, 21, 'Trang quan tri bao cao doanh thu', 'Phat trien trang dashboard bao cao doanh thu voi bo loc va chuc nang xuat du lieu; da giao san pham nhung bi khieu nai ve ket qua.', 14000000.00, 18000000.00, '2026-05-22', 'DaChot', 0, true, '2026-04-24 09:00:00', '2026-05-25 10:00:00')
 ON CONFLICT ("YeuCauID") DO NOTHING;
 
+-- Supervisor request-phase demo data.
+-- ISO Quality Control (TaiKhoanID 21) receives only a small representative
+-- inbox before a contract exists: one pending, one rejected and one accepted.
+UPDATE "YeuCau"
+SET
+	"GiamSatID" = CASE
+		WHEN "YeuCauID" IN (1, 2, 7, 8, 10, 15, 20, 30, 32, 33) THEN 21
+		WHEN "YeuCauID" IN (3, 4, 5, 6, 9, 12, 13, 17, 19, 23, 27, 31) THEN 25
+		ELSE 26
+	END,
+	"TrangThaiGiamSat" = CASE
+		-- Existing/proceeding contracts were approved before work began.
+		WHEN "YeuCauID" IN (1, 2, 7, 15, 20, 32, 33) THEN 'DaChapNhan'::"TrangThaiYeuCauGiamSat"
+		-- Three request-phase examples assigned to supervisor 21.
+		WHEN "YeuCauID" = 8 THEN 'ChoDuyet'::"TrangThaiYeuCauGiamSat"
+		WHEN "YeuCauID" = 10 THEN 'TuChoi'::"TrangThaiYeuCauGiamSat"
+		WHEN "YeuCauID" = 30 THEN 'DaChapNhan'::"TrangThaiYeuCauGiamSat"
+		WHEN "YeuCauID" IN (12, 31) THEN 'TuChoi'::"TrangThaiYeuCauGiamSat"
+		WHEN "YeuCauID" IN (3, 4, 5, 6, 9, 13, 17, 19, 23, 27) THEN 'DaChapNhan'::"TrangThaiYeuCauGiamSat"
+		ELSE 'ChoDuyet'::"TrangThaiYeuCauGiamSat"
+	END,
+	"LyDoTuChoiGiamSat" = CASE
+		WHEN "YeuCauID" = 10 THEN 'Khong du nguon luc vao thoi diem nay.'
+		WHEN "YeuCauID" IN (12, 31) THEN 'Yeu cau da huy truoc khi nhan giam sat.'
+		ELSE NULL
+	END,
+	"NgayGiamSatChapNhan" = CASE
+		WHEN "YeuCauID" IN (1, 2, 7, 15, 20, 30, 32, 33) THEN "NgayTao" + INTERVAL '1 day'
+		WHEN "YeuCauID" IN (3, 4, 5, 6, 9, 13, 17, 19, 23, 27) THEN "NgayTao" + INTERVAL '1 day'
+		ELSE NULL
+	END;
+
 INSERT INTO "BaoGia"
 	("BaoGiaID", "YeuCauID", "TaiKhoanID", "GiaDeXuat", "ThoiGianThucHien", "NoiDung", "TrangThai", "NgayTao", "NgayCapNhat")
 VALUES
@@ -221,8 +254,8 @@ VALUES
 	(1, 1, 13, 1, 21, 32000000.00, 30, 'DangThucHien', '2026-05-02 09:00:00', NULL, 'DangGiamSat', 450000.00, false, false, false, true, '2026-05-02 08:30:00'),
 	(2, 7, 13, 1, 21, 36000000.00, 45, 'HoanThanh', '2026-04-10 09:00:00', '2026-05-08 17:00:00', 'HoanThanh', 450000.00, true, true, true, true, '2026-04-09 08:30:00'),
 	(3, 15, 13, 1, 21, 9500000.00, 18, 'DangThucHien', '2026-05-14 09:00:00', NULL, 'DangGiamSat', 450000.00, false, false, false, true, '2026-05-14 08:30:00'),
-	(4, 20, 3, 1, 21, 38000000.00, 55, 'DaHuy', NULL, NULL, 'TuChoi', 450000.00, false, false, false, false, '2026-05-15 08:30:00'),
-	(5, 2, 13, 2, 21, 30000000.00, 30, 'MoiTao', NULL, NULL, 'ChoDuyet', 450000.00, false, false, false, false, '2026-05-03 08:30:00'),
+	(4, 20, 3, 1, 21, 38000000.00, 55, 'DaHuy', NULL, NULL, 'HoanThanh', 450000.00, false, false, false, false, '2026-05-15 08:30:00'),
+	(5, 2, 13, 2, 21, 30000000.00, 30, 'DangThucHien', '2026-05-03 09:00:00', NULL, 'DangGiamSat', 450000.00, false, false, false, true, '2026-05-03 08:30:00'),
 	-- Da ban giao 100%, chua mo tranh chap: nguoi thue 1 co the test gui khieu nai ket qua.
 	(6, 32, 13, 1, 21, 12000000.00, 20, 'HoanThanh', '2026-05-04 09:00:00', '2026-05-24 17:00:00', 'HoanThanh', 450000.00, true, true, true, true, '2026-05-04 08:30:00'),
 	-- Da co tranh chap DangXuLy: don vi giam sat 21 co the test dua ra ket luan.
@@ -401,8 +434,8 @@ INSERT INTO "YeuCauGiamSat"
 VALUES
 	(1, 1, 1, 21, 13, 'DaChapNhan', NULL, 450000.00, '2026-05-02 08:45:00', '2026-05-02 10:00:00', NULL),
 	(2, 2, 1, 21, 13, 'HoanThanh', NULL, 450000.00, '2026-04-09 08:45:00', '2026-04-09 10:00:00', '2026-05-08 17:00:00'),
-	(3, 4, 1, 21, 3, 'TuChoi', 'Lich giam sat khong phu hop voi thoi gian thuc hien.', 450000.00, '2026-05-15 08:45:00', NULL, NULL),
-	(4, 5, 2, 21, 13, 'ChoDuyet', NULL, 450000.00, '2026-05-03 08:45:00', NULL, NULL),
+	(3, 4, 1, 21, 3, 'HoanThanh', NULL, 450000.00, '2026-05-15 08:45:00', '2026-05-15 09:00:00', '2026-05-15 10:00:00'),
+	(4, 5, 2, 21, 13, 'DaChapNhan', NULL, 450000.00, '2026-05-03 08:45:00', '2026-05-03 09:00:00', NULL),
 	(5, 3, 1, 21, 13, 'DaChapNhan', NULL, 450000.00, '2026-05-14 08:45:00', '2026-05-14 10:00:00', NULL),
 	(6, 6, 1, 21, 13, 'HoanThanh', NULL, 450000.00, '2026-05-04 08:45:00', '2026-05-04 10:00:00', '2026-05-24 17:00:00'),
 	(7, 7, 1, 21, 13, 'HoanThanh', NULL, 450000.00, '2026-05-01 08:45:00', '2026-05-01 10:00:00', '2026-05-22 17:00:00')
@@ -581,6 +614,7 @@ SELECT setval(pg_get_serial_sequence('"YeuCauGiamSat"', 'YCGiamSatID'), COALESCE
 SELECT setval(pg_get_serial_sequence('"TienDo"', 'TienDoID'), COALESCE(MAX("TienDoID"), 1), true) FROM "TienDo";
 SELECT setval(pg_get_serial_sequence('"ThanhToan"', 'ThanhToanID'), COALESCE(MAX("ThanhToanID"), 1), true) FROM "ThanhToan";
 SELECT setval(pg_get_serial_sequence('"TranhChap"', 'TranhChapID'), COALESCE(MAX("TranhChapID"), 1), true) FROM "TranhChap";
+SELECT setval(pg_get_serial_sequence('"YeuCauHoanTien"', 'YeuCauHoanTienID'), COALESCE(MAX("YeuCauHoanTienID"), 1), true) FROM "YeuCauHoanTien";
 SELECT setval(pg_get_serial_sequence('"BangChungTranhChap"', 'BangChungID'), COALESCE(MAX("BangChungID"), 1), true) FROM "BangChungTranhChap";
 SELECT setval(pg_get_serial_sequence('"KetLuanTranhChap"', 'KetLuanID'), COALESCE(MAX("KetLuanID"), 1), true) FROM "KetLuanTranhChap";
 SELECT setval(pg_get_serial_sequence('"CuocHoiThoai"', 'CuocHoiThoaiID'), COALESCE(MAX("CuocHoiThoaiID"), 1), true) FROM "CuocHoiThoai";

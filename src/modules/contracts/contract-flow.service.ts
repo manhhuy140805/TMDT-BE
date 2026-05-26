@@ -61,6 +61,12 @@ export class ContractFlowService {
       throw new BadRequestException('Yeu cau khong the chot freelancer');
     }
 
+    if (baoGia.YeuCau.TrangThaiGiamSat !== 'DaChapNhan') {
+      throw new BadRequestException(
+        'Don vi giam sat chua phe duyet yeu cau nay, khong the chot hop dong!',
+      );
+    }
+
     const supervisorProfile = await this.prisma.donViGiamSat.findFirst({
       where: { TaiKhoanID: baoGia.YeuCau.GiamSatID },
       select: { GiamSatID: true, TrangThai: true },
@@ -89,6 +95,7 @@ export class ContractFlowService {
         where: {
           YeuCauID: baoGia.YeuCauID,
           TrangThai: { in: ['DangNhanHoSo', 'DaDong'] },
+          TrangThaiGiamSat: 'DaChapNhan',
         },
         data: { TrangThai: 'DaChot' },
       });
@@ -108,7 +115,7 @@ export class ContractFlowService {
           TrangThai: 'DangThucHien',
           NgayBatDau: new Date(),
           GiamSatID: baoGia.YeuCau.GiamSatID,
-          TrangThaiGiamSat: 'ChoDuyet',
+          TrangThaiGiamSat: 'DangGiamSat',
           PhiGiamSat: phiGiamSat,
           DaThanhToanEscrow: true,
         },
@@ -127,7 +134,7 @@ export class ContractFlowService {
         },
       });
 
-      // 3. Tao loi moi giam sat tu don vi da gan tren yeu cau.
+      // 3. Store the already-approved supervisor assignment for contract history.
       await tx.yeuCauGiamSat.create({
         data: {
           CongViecID: congViec.CongViecID,
@@ -135,7 +142,8 @@ export class ContractFlowService {
           GiamSatID: baoGia.YeuCau.GiamSatID,
           FreelancerID: baoGia.TaiKhoanID,
           PhiGiamSatThoa: phiGiamSat,
-          TrangThai: 'ChoDuyet',
+          TrangThai: 'DaChapNhan',
+          NgayChapNhan: new Date(),
         },
       });
 
