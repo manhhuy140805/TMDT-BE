@@ -1,4 +1,28 @@
 -- Every YeuCau and CongViec must be assigned to an active supervisor account.
+
+-- First, create the GiamSatID columns if they don't exist
+ALTER TABLE "YeuCau"
+    ADD COLUMN IF NOT EXISTS "GiamSatID" INTEGER;
+
+ALTER TABLE "CongViec"
+    ADD COLUMN IF NOT EXISTS "GiamSatID" INTEGER;
+
+-- Create TrangThaiYeuCauGiamSat enum if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'TrangThaiYeuCauGiamSat') THEN
+        CREATE TYPE "TrangThaiYeuCauGiamSat" AS ENUM ('ChoDuyet', 'DaChapNhan', 'TuChoi', 'HoanThanh');
+    END IF;
+END $$;
+
+-- Create TrangThaiGiamSatCongViec enum if it doesn't exist  
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'TrangThaiGiamSatCongViec') THEN
+        CREATE TYPE "TrangThaiGiamSatCongViec" AS ENUM ('KhongCo', 'ChoDuyet', 'DangGiamSat', 'HoanThanh', 'TuChoi');
+    END IF;
+END $$;
+
 DO $$
 DECLARE
     default_supervisor_id INTEGER;

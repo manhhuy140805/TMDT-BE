@@ -15,6 +15,19 @@ export type DisputeDto = {
   yeuCauHoanTien: string;
   ngayMo: string;
   ngayDong: string | null;
+  ketLuan: DisputeConclusionDto | null;
+};
+
+export type DisputeConclusionDto = {
+  ketLuanId: number;
+  giamSatId: number;
+  ketQua: KetQuaTranhChap;
+  lyDo: string;
+  soTienHoan: string;
+  soTienFreelancer: string;
+  soTienGiamSat: string;
+  benChiuPhi: BenChiuPhiKetLuan;
+  ngayKetLuan: string;
 };
 
 export type DisputeListResponseDto = {
@@ -43,6 +56,8 @@ export type ResolveDisputeDto = {
   ketQua: KetQuaTranhChap;
   lyDo: string;
   soTienHoan: number;
+  soTienFreelancer?: number;
+  soTienGiamSat?: number;
   benChiuPhi: BenChiuPhiKetLuan;
 };
 

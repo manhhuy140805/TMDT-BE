@@ -26,6 +26,19 @@ const DISPUTE_SELECT = {
   YeuCauHoanTien: true,
   NgayMo: true,
   NgayDong: true,
+  KetLuanTranhChap: {
+    select: {
+      KetLuanID: true,
+      GiamSatID: true,
+      KetQua: true,
+      LyDo: true,
+      SoTienHoan: true,
+      SoTienFreelancer: true,
+      SoTienGiamSat: true,
+      BenChiuPhi: true,
+      NgayKetLuan: true,
+    },
+  },
 } as const;
 
 type DisputeEntity = Prisma.TranhChapGetPayload<{
@@ -192,31 +205,58 @@ export class DisputesService {
       throw new BadRequestException('Chi don vi giam sat dang xu ly moi duoc ket luan');
     }
 
-    // 1. Create conclusion record
-    await this.prisma.ketLuanTranhChap.create({
-      data: {
-        TranhChapID: id,
-        GiamSatID: payload.giamSatId,
-        KetQua: payload.ketQua,
-        LyDo: payload.lyDo,
-        SoTienHoan: payload.soTienHoan,
-        BenChiuPhi: payload.benChiuPhi,
-      },
-    });
+    const lyDo = payload.lyDo?.trim();
+    if (!lyDo) {
+      throw new BadRequestException('Ly do ket luan la bat buoc');
+    }
 
-    // 2. Update dispute status
-    const updatedDispute = await this.prisma.tranhChap.update({
-      where: { TranhChapID: id },
-      data: {
-        TrangThai: 'DaKetLuan',
-        NgayDong: new Date(),
-      },
-      select: DISPUTE_SELECT,
-    });
+    const updatedDispute = await this.prisma.$transaction(async (tx) => {
+      await tx.ketLuanTranhChap.create({
+        data: {
+          TranhChapID: id,
+          GiamSatID: payload.giamSatId,
+          KetQua: payload.ketQua,
+          LyDo: lyDo,
+          SoTienHoan: payload.soTienHoan ?? 0,
+          SoTienFreelancer: payload.soTienFreelancer ?? 0,
+          SoTienGiamSat: payload.soTienGiamSat ?? 0,
+          BenChiuPhi: payload.benChiuPhi ?? 'ChiaSe',
+        },
+      });
 
-    // Note: Depending on the 'ketQua', further actions like calling PaymentService 
-    // to refund or continue might be needed here. 
-    // For now, we are just saving the conclusion to keep concerns separated.
+      const resolvedDispute = await tx.tranhChap.update({
+        where: { TranhChapID: id },
+        data: {
+          TrangThai: 'DaKetLuan',
+          NgayDong: new Date(),
+        },
+        select: DISPUTE_SELECT,
+      });
+
+      if (payload.ketQua === 'HoanTienNguoiThue') {
+        await tx.congViec.update({
+          where: { CongViecID: dispute.CongViecID },
+          data: {
+            TrangThai: 'DaHuy',
+            TrangThaiGiamSat: 'HoanThanh',
+            NgayKetThuc: new Date(),
+          },
+        });
+
+        await tx.yeuCauGiamSat.updateMany({
+          where: {
+            CongViecID: dispute.CongViecID,
+            TrangThai: 'DaChapNhan',
+          },
+          data: {
+            TrangThai: 'HoanThanh',
+            NgayHoanThanh: new Date(),
+          },
+        });
+      }
+
+      return resolvedDispute;
+    });
 
     return {
       message: 'Ket luan tranh chap thanh cong',
@@ -236,6 +276,21 @@ export class DisputesService {
       yeuCauHoanTien: dispute.YeuCauHoanTien.toString(),
       ngayMo: dispute.NgayMo.toISOString(),
       ngayDong: dispute.NgayDong ? dispute.NgayDong.toISOString() : null,
+      ketLuan: dispute.KetLuanTranhChap
+        ? {
+            ketLuanId: dispute.KetLuanTranhChap.KetLuanID,
+            giamSatId: dispute.KetLuanTranhChap.GiamSatID,
+            ketQua: dispute.KetLuanTranhChap.KetQua,
+            lyDo: dispute.KetLuanTranhChap.LyDo,
+            soTienHoan: dispute.KetLuanTranhChap.SoTienHoan.toString(),
+            soTienFreelancer:
+              dispute.KetLuanTranhChap.SoTienFreelancer.toString(),
+            soTienGiamSat:
+              dispute.KetLuanTranhChap.SoTienGiamSat.toString(),
+            benChiuPhi: dispute.KetLuanTranhChap.BenChiuPhi,
+            ngayKetLuan: dispute.KetLuanTranhChap.NgayKetLuan.toISOString(),
+          }
+        : null,
     };
   }
 }

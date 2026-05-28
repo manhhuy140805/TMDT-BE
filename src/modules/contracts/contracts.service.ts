@@ -146,47 +146,52 @@ export class ContractsService {
     id: number,
     payload: UpdateContractStatusDto,
   ): Promise<ContractMutationResponseDto> {
-    await this.findContractOrThrow(id);
+    try {
+      await this.findContractOrThrow(id);
 
-    this.ensureValidTrangThai(payload.trangThai);
+      this.ensureValidTrangThai(payload.trangThai);
 
-    if (payload.trangThai !== 'HoanThanh') {
-      const dispute = await this.prisma.tranhChap.findFirst({
+      if (payload.trangThai !== 'HoanThanh' && payload.trangThai !== 'DaHuy') {
+        const dispute = await this.prisma.tranhChap.findFirst({
+          where: { CongViecID: id },
+          select: { TranhChapID: true },
+        });
+
+        if (dispute) {
+          throw new BadRequestException(
+            'Cong viec da co tranh chap ket qua phai giu trang thai hoan thanh hoac huy',
+          );
+        }
+      }
+
+      const data: Prisma.CongViecUpdateInput = {
+        TrangThai: payload.trangThai,
+      };
+
+      // Set NgayBatDau when status changes to DangThucHien
+      if (payload.trangThai === 'DangThucHien') {
+        data.NgayBatDau = new Date();
+      }
+
+      // Set NgayKetThuc when status changes to HoanThanh or DaHuy
+      if (payload.trangThai === 'HoanThanh' || payload.trangThai === 'DaHuy') {
+        data.NgayKetThuc = new Date();
+      }
+
+      const contract = await this.prisma.congViec.update({
         where: { CongViecID: id },
-        select: { TranhChapID: true },
+        data,
+        select: CONTRACT_SELECT,
       });
 
-      if (dispute) {
-        throw new BadRequestException(
-          'Cong viec da co tranh chap ket qua phai giu trang thai hoan thanh',
-        );
-      }
+      return {
+        message: 'Cap nhat trang thai hop dong thanh cong',
+        contract: this.toContractWithDetailsDto(contract),
+      };
+    } catch (error) {
+      console.error('[updateStatus Error]', error);
+      throw error;
     }
-
-    const data: Prisma.CongViecUpdateInput = {
-      TrangThai: payload.trangThai,
-    };
-
-    // Set NgayBatDau when status changes to DangThucHien
-    if (payload.trangThai === 'DangThucHien') {
-      data.NgayBatDau = new Date();
-    }
-
-    // Set NgayKetThuc when status changes to HoanThanh or DaHuy
-    if (payload.trangThai === 'HoanThanh' || payload.trangThai === 'DaHuy') {
-      data.NgayKetThuc = new Date();
-    }
-
-    const contract = await this.prisma.congViec.update({
-      where: { CongViecID: id },
-      data,
-      select: CONTRACT_SELECT,
-    });
-
-    return {
-      message: 'Cap nhat trang thai hop dong thanh cong',
-      contract: this.toContractWithDetailsDto(contract),
-    };
   }
 
   async getDetail(id: number): Promise<ContractResponseDto> {
@@ -243,8 +248,49 @@ export class ContractsService {
   private toContractWithDetailsDto(
     contract: ContractEntity,
   ): ContractWithDetailsDto {
-    if (!contract.GiamSat || !contract.GiamSat.DonViGiamSat) {
-      throw new BadRequestException('Hop dong chua co don vi giam sat');
+    // Nếu chưa assign giám sát, cho phép update status
+    if (!contract.GiamSat) {
+      return {
+        congViecId: contract.CongViecID,
+        yeuCauId: contract.YeuCauID,
+        freelancerId: contract.FreelancerID,
+        nguoiThueId: contract.NguoiThueID,
+        giaThoa: contract.GiaThoa.toString(),
+        thoiGianThoa: contract.ThoiGianThoa,
+        trangThai: contract.TrangThai,
+        ngayBatDau: contract.NgayBatDau
+          ? contract.NgayBatDau.toISOString()
+          : null,
+        ngayKetThuc: contract.NgayKetThuc
+          ? contract.NgayKetThuc.toISOString()
+          : null,
+        giamSatId: contract.GiamSatID || null,
+        trangThaiGiamSat: contract.TrangThaiGiamSat || null,
+        phiGiamSat: contract.PhiGiamSat?.toString() || '0',
+        ngayTao: contract.NgayTao.toISOString(),
+        yeuCau: {
+          yeuCauId: contract.YeuCau.YeuCauID,
+          tieuDe: contract.YeuCau.TieuDe,
+          moTa: contract.YeuCau.MoTa,
+        },
+        freelancer: {
+          freelancerId: contract.FreelancerID,
+          taiKhoanId: contract.Freelancer.TaiKhoanID,
+          hoTen: contract.Freelancer.HoTen,
+          email: contract.Freelancer.Email,
+        },
+        nguoiThue: {
+          nguoiThueId: contract.NguoiThueID,
+          taiKhoanId: contract.NguoiThue.TaiKhoanID,
+          hoTen: contract.NguoiThue.HoTen,
+          email: contract.NguoiThue.Email,
+        },
+        giamSat: null,
+      } as ContractWithDetailsDto;
+    }
+
+    if (!contract.GiamSat.DonViGiamSat) {
+      throw new BadRequestException('Giam sat chua co don vi');
     }
 
     return {

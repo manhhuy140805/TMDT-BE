@@ -42,7 +42,7 @@ export type ContractWithDetailsDto = ContractDto & {
     taiKhoanId?: number;
     tenDonVi: string;
     email?: string;
-  };
+  } | null;
 };
 
 export type ContractsListResponseDto = {

@@ -553,6 +553,8 @@ model KetLuanTranhChap {
   KetQua      KetQuaTranhChap
   LyDo        String            @db.Text
   SoTienHoan  Decimal           @default(0.00) @db.Decimal(15, 2)
+  SoTienFreelancer Decimal      @default(0.00) @db.Decimal(15, 2)
+  SoTienGiamSat Decimal         @default(0.00) @db.Decimal(15, 2)
   BenChiuPhi  BenChiuPhiKetLuan @default(ChiaSe)
   NgayKetLuan DateTime          @default(now()) @db.Timestamp(3)
 
