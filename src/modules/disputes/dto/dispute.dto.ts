@@ -26,6 +26,7 @@ export type DisputeConclusionDto = {
   soTienHoan: string;
   soTienFreelancer: string;
   soTienGiamSat: string;
+  soTienHeThong: string;
   benChiuPhi: BenChiuPhiKetLuan;
   ngayKetLuan: string;
 };
@@ -58,6 +59,7 @@ export type ResolveDisputeDto = {
   soTienHoan: number;
   soTienFreelancer?: number;
   soTienGiamSat?: number;
+  soTienHeThong?: number;
   benChiuPhi: BenChiuPhiKetLuan;
 };
 

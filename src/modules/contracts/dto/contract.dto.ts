@@ -3,6 +3,8 @@ import type {
   TrangThaiGiamSatCongViec,
 } from '@prisma/client';
 
+export type TrangThaiCongViecHienThi = TrangThaiCongViec | 'DaHoanTien';
+
 export type ContractDto = {
   congViecId: number;
   yeuCauId: number;
@@ -10,7 +12,7 @@ export type ContractDto = {
   nguoiThueId: number;
   giaThoa: string;
   thoiGianThoa: number;
-  trangThai: TrangThaiCongViec;
+  trangThai: TrangThaiCongViecHienThi;
   ngayBatDau: string | null;
   ngayKetThuc: string | null;
   giamSatId: number;

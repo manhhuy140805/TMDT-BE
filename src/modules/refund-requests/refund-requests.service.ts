@@ -144,6 +144,7 @@ export class RefundRequestsService {
     const settlement = this.calculateSettlement(
       Number(deposit.SoTien),
       Number(contract.GiaThoa),
+      this.getRequestedRefundAmount(payload),
     );
 
     const refundRequest = await this.prisma.$transaction(async (tx) => {
@@ -243,6 +244,21 @@ export class RefundRequestsService {
         throw new BadRequestException('Khong tim thay escrow dang duoc giu');
       }
 
+      const settlement = this.calculateSettlement(
+        Number(deposit.SoTien),
+        Number(contract.GiaThoa),
+        this.getRequestedRefundAmount(payload) || Number(refundRequest.TienHoan),
+      );
+      const paymentRequest = {
+        ...refundRequest,
+        ...settlement,
+      };
+
+      await tx.yeuCauHoanTien.update({
+        where: { YeuCauHoanTienID: id },
+        data: settlement,
+      });
+
       await tx.thanhToan.update({
         where: { ThanhToanID: deposit.ThanhToanID },
         data: { TrangThai: 'DaHoan' },
@@ -253,7 +269,7 @@ export class RefundRequestsService {
           {
             CongViecID: refundRequest.CongViecID,
             TaiKhoanID: refundRequest.NguoiThueID,
-            SoTien: refundRequest.TienHoan,
+            SoTien: paymentRequest.TienHoan,
             LoaiTT: 'HoanTien',
             PhuongThuc: 'Vi',
             TrangThai: 'ThanhCong',
@@ -262,7 +278,7 @@ export class RefundRequestsService {
           {
             CongViecID: refundRequest.CongViecID,
             TaiKhoanID: refundRequest.NguoiThueID,
-            SoTien: refundRequest.TienFreelancer,
+            SoTien: paymentRequest.TienFreelancer,
             LoaiTT: 'ThanhToanCuoi',
             PhuongThuc: 'Vi',
             TrangThai: 'ThanhCong',
@@ -271,7 +287,7 @@ export class RefundRequestsService {
           {
             CongViecID: refundRequest.CongViecID,
             TaiKhoanID: refundRequest.NguoiThueID,
-            SoTien: refundRequest.TienGiamSat,
+            SoTien: paymentRequest.TienGiamSat,
             LoaiTT: 'PhiGiamSat',
             PhuongThuc: 'Vi',
             TrangThai: 'ThanhCong',
@@ -280,7 +296,7 @@ export class RefundRequestsService {
           {
             CongViecID: refundRequest.CongViecID,
             TaiKhoanID: refundRequest.NguoiThueID,
-            SoTien: refundRequest.PhiHeThong,
+            SoTien: paymentRequest.PhiHeThong,
             LoaiTT: 'PhiHeThong',
             PhuongThuc: 'Vi',
             TrangThai: 'ThanhCong',
@@ -291,7 +307,7 @@ export class RefundRequestsService {
 
       await tx.freelancer.update({
         where: { TaiKhoanID: refundRequest.FreelancerID },
-        data: { SoDu: { increment: refundRequest.TienFreelancer } },
+        data: { SoDu: { increment: paymentRequest.TienFreelancer } },
       });
 
       await tx.congViec.update({
@@ -395,6 +411,9 @@ export class RefundRequestsService {
         });
       }
 
+      const requestedRefundAmount =
+        this.getRequestedRefundAmount(payload) || Number(refundRequest.TienHoan);
+
       const dispute = await tx.tranhChap.create({
         data: {
           CongViecID: refundRequest.CongViecID,
@@ -402,7 +421,7 @@ export class RefundRequestsService {
           GiamSatID: contract.GiamSatID,
           LyDo: refundRequest.LyDo,
           MoTa: refundRequest.MoTa,
-          YeuCauHoanTien: refundRequest.TienHoan,
+          YeuCauHoanTien: requestedRefundAmount,
           TrangThai: 'MoiMo',
         },
       });
@@ -426,7 +445,10 @@ export class RefundRequestsService {
 
       return tx.yeuCauHoanTien.update({
         where: { YeuCauHoanTienID: id },
-        data: { TranhChapID: dispute.TranhChapID },
+        data: {
+          TranhChapID: dispute.TranhChapID,
+          TienHoan: requestedRefundAmount,
+        },
         select: REFUND_REQUEST_SELECT,
       });
     });
@@ -466,19 +488,57 @@ export class RefundRequestsService {
     }
   }
 
-  private calculateSettlement(tongEscrow: number, giaThoa: number) {
-    const PhiHeThong = this.roundMoney(giaThoa * SYSTEM_FEE_PERCENT);
-    const TienFreelancer = this.roundMoney(giaThoa * EARLY_SETTLEMENT_SHARE);
-    const TienGiamSat = this.roundMoney(giaThoa * EARLY_SETTLEMENT_SHARE);
-    const TienHoan = this.roundMoney(
-      tongEscrow - PhiHeThong - TienFreelancer - TienGiamSat,
-    );
+  private getRequestedRefundAmount(
+    payload: Partial<CreateRefundRequestDto & DecideRefundRequestDto>,
+  ): number | null {
+    const candidates = [
+      payload.requestedRefundAmount,
+      payload.tienHoanYeuCau,
+      payload.soTienYeuCau,
+      payload.soTienHoanYeuCau,
+      payload.yeuCauHoanTien,
+      payload.soTienHoan,
+      payload.refundAmount,
+      payload.amount,
+      'tienHoan' in payload ? payload.tienHoan : undefined,
+    ];
 
-    if (TienHoan < 0) {
+    for (const candidate of candidates) {
+      const amount = Number(candidate);
+      if (Number.isFinite(amount) && amount > 0) {
+        return this.roundMoney(amount);
+      }
+    }
+
+    return null;
+  }
+
+  private calculateSettlement(
+    tongEscrow: number,
+    giaThoa: number,
+    requestedRefundAmount?: number | null,
+  ) {
+    const PhiHeThong = this.roundMoney(giaThoa * SYSTEM_FEE_PERCENT);
+    const TienGiamSat = this.roundMoney(giaThoa * EARLY_SETTLEMENT_SHARE);
+    const fallbackFreelancerShare = this.roundMoney(
+      giaThoa * EARLY_SETTLEMENT_SHARE,
+    );
+    const maxRefund = this.roundMoney(tongEscrow - PhiHeThong - TienGiamSat);
+    const TienHoan = requestedRefundAmount
+      ? this.roundMoney(requestedRefundAmount)
+      : this.roundMoney(
+          tongEscrow - PhiHeThong - fallbackFreelancerShare - TienGiamSat,
+        );
+
+    if (TienHoan < 0 || TienHoan > maxRefund) {
       throw new BadRequestException(
-        'Escrow khong du de tru cac khoan phi khi hoan tien',
+        `So tien hoan phai tu 0 den ${maxRefund}`,
       );
     }
+
+    const TienFreelancer = this.roundMoney(
+      tongEscrow - PhiHeThong - TienGiamSat - TienHoan,
+    );
 
     return {
       TongEscrow: this.roundMoney(tongEscrow),

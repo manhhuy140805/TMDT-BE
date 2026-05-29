@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import type {
   CreateDisputeDto,
   DisputeDto,
@@ -14,6 +14,8 @@ import type {
   ResolveDisputeDto,
   ReviewDisputeDto,
 } from './dto';
+
+const SYSTEM_FEE_PERCENT = 0.05;
 
 const DISPUTE_SELECT = {
   TranhChapID: true,
@@ -35,6 +37,7 @@ const DISPUTE_SELECT = {
       SoTienHoan: true,
       SoTienFreelancer: true,
       SoTienGiamSat: true,
+      SoTienHeThong: true,
       BenChiuPhi: true,
       NgayKetLuan: true,
     },
@@ -75,9 +78,7 @@ export class DisputesService {
     };
   }
 
-  async create(
-    payload: CreateDisputeDto,
-  ): Promise<DisputeMutationResponseDto> {
+  async create(payload: CreateDisputeDto): Promise<DisputeMutationResponseDto> {
     const contract = await this.prisma.congViec.findUnique({
       where: { CongViecID: payload.congViecId },
     });
@@ -153,7 +154,9 @@ export class DisputesService {
     }
 
     if (dispute.TrangThai !== 'MoiMo') {
-      throw new BadRequestException('Khong the xu ly tranh chap o trang thai hien tai');
+      throw new BadRequestException(
+        'Khong the xu ly tranh chap o trang thai hien tai',
+      );
     }
 
     if (dispute.GiamSatID !== payload.giamSatId) {
@@ -198,11 +201,15 @@ export class DisputesService {
     }
 
     if (dispute.TrangThai !== 'DangXuLy') {
-      throw new BadRequestException('Tranh chap chua duoc xu ly hoac da ket luan');
+      throw new BadRequestException(
+        'Tranh chap chua duoc xu ly hoac da ket luan',
+      );
     }
 
     if (dispute.GiamSatID !== payload.giamSatId) {
-      throw new BadRequestException('Chi don vi giam sat dang xu ly moi duoc ket luan');
+      throw new BadRequestException(
+        'Chi don vi giam sat dang xu ly moi duoc ket luan',
+      );
     }
 
     const lyDo = payload.lyDo?.trim();
@@ -211,15 +218,71 @@ export class DisputesService {
     }
 
     const updatedDispute = await this.prisma.$transaction(async (tx) => {
+      const contract = await tx.congViec.findUnique({
+        where: { CongViecID: dispute.CongViecID },
+      });
+
+      if (!contract) {
+        throw new NotFoundException('Hop dong khong ton tai');
+      }
+
+      let settlement = {
+        soTienHoan: this.roundMoney(payload.soTienHoan ?? 0),
+        soTienFreelancer: this.roundMoney(payload.soTienFreelancer ?? 0),
+        soTienGiamSat: this.roundMoney(payload.soTienGiamSat ?? 0),
+        soTienHeThong: this.roundMoney(payload.soTienHeThong ?? 0),
+      };
+
+      if (payload.ketQua === 'HoanTienNguoiThue') {
+        const [deposit, paidOut] = await Promise.all([
+          tx.thanhToan.findFirst({
+            where: {
+              CongViecID: dispute.CongViecID,
+              LoaiTT: 'DatCoc',
+              TrangThai: 'ThanhCong',
+            },
+            orderBy: { NgayTao: 'desc' },
+          }),
+          tx.thanhToan.findFirst({
+            where: {
+              CongViecID: dispute.CongViecID,
+              LoaiTT: {
+                in: ['ThanhToanCuoi', 'HoanTien', 'PhiHeThong', 'PhiGiamSat'],
+              },
+              TrangThai: 'ThanhCong',
+            },
+            select: { ThanhToanID: true },
+          }),
+        ]);
+
+        if (!deposit || paidOut) {
+          throw new BadRequestException(
+            'Tien escrow khong con duoc giu de ket luan hoan tien',
+          );
+        }
+
+        settlement = this.calculateRefundSettlement(
+          Number(contract.GiaThoa),
+          Number(contract.PhiGiamSat),
+          payload.soTienHoan ?? 0,
+        );
+
+        await tx.thanhToan.update({
+          where: { ThanhToanID: deposit.ThanhToanID },
+          data: { TrangThai: 'DaHoan' },
+        });
+      }
+
       await tx.ketLuanTranhChap.create({
         data: {
           TranhChapID: id,
           GiamSatID: payload.giamSatId,
           KetQua: payload.ketQua,
           LyDo: lyDo,
-          SoTienHoan: payload.soTienHoan ?? 0,
-          SoTienFreelancer: payload.soTienFreelancer ?? 0,
-          SoTienGiamSat: payload.soTienGiamSat ?? 0,
+          SoTienHoan: settlement.soTienHoan,
+          SoTienFreelancer: settlement.soTienFreelancer,
+          SoTienGiamSat: settlement.soTienGiamSat,
+          SoTienHeThong: settlement.soTienHeThong,
           BenChiuPhi: payload.benChiuPhi ?? 'ChiaSe',
         },
       });
@@ -234,6 +297,54 @@ export class DisputesService {
       });
 
       if (payload.ketQua === 'HoanTienNguoiThue') {
+        await tx.thanhToan.createMany({
+          data: [
+            {
+              CongViecID: dispute.CongViecID,
+              TaiKhoanID: contract.NguoiThueID,
+              SoTien: settlement.soTienHoan,
+              LoaiTT: 'HoanTien',
+              PhuongThuc: 'Vi',
+              TrangThai: 'ThanhCong',
+              GhiChu: `Hoan tien theo ket luan tranh chap #${id}`,
+            },
+            {
+              CongViecID: dispute.CongViecID,
+              TaiKhoanID: contract.NguoiThueID,
+              SoTien: settlement.soTienFreelancer,
+              LoaiTT: 'ThanhToanCuoi',
+              PhuongThuc: 'Vi',
+              TrangThai: 'ThanhCong',
+              GhiChu: `Giai ngan freelancer theo ket luan tranh chap #${id}`,
+            },
+            {
+              CongViecID: dispute.CongViecID,
+              TaiKhoanID: contract.NguoiThueID,
+              SoTien: settlement.soTienGiamSat,
+              LoaiTT: 'PhiGiamSat',
+              PhuongThuc: 'Vi',
+              TrangThai: 'ThanhCong',
+              GhiChu: `Phi giam sat theo ket luan tranh chap #${id}`,
+            },
+            {
+              CongViecID: dispute.CongViecID,
+              TaiKhoanID: contract.NguoiThueID,
+              SoTien: settlement.soTienHeThong,
+              LoaiTT: 'PhiHeThong',
+              PhuongThuc: 'Vi',
+              TrangThai: 'ThanhCong',
+              GhiChu: `Phi he thong theo ket luan tranh chap #${id}`,
+            },
+          ],
+        });
+
+        if (settlement.soTienFreelancer > 0) {
+          await tx.freelancer.update({
+            where: { TaiKhoanID: contract.FreelancerID },
+            data: { SoDu: { increment: settlement.soTienFreelancer } },
+          });
+        }
+
         await tx.congViec.update({
           where: { CongViecID: dispute.CongViecID },
           data: {
@@ -264,6 +375,68 @@ export class DisputesService {
     };
   }
 
+  private calculateRefundSettlement(
+    totalContractAmount: number,
+    supervisorFee: number,
+    refundToEmployer: number,
+  ) {
+    const roundedTotalContractAmount = this.roundMoney(totalContractAmount);
+    const roundedSupervisorFee = this.roundMoney(supervisorFee);
+    const roundedRefundToEmployer = this.roundMoney(refundToEmployer);
+
+    if (roundedRefundToEmployer < 0) {
+      throw new BadRequestException('So tien hoan phai lon hon hoac bang 0');
+    }
+
+    if (
+      roundedSupervisorFee < 0 ||
+      roundedSupervisorFee > roundedTotalContractAmount
+    ) {
+      throw new BadRequestException(
+        'Phi giam sat khong hop le so voi tong tien hop dong',
+      );
+    }
+
+    const freelancerFund = this.roundMoney(
+      roundedTotalContractAmount - roundedSupervisorFee,
+    );
+
+    if (roundedRefundToEmployer > freelancerFund) {
+      throw new BadRequestException(
+        'So tien hoan khong duoc vuot qua phan quy cua freelancer sau phi giam sat',
+      );
+    }
+
+    const freelancerGross = this.roundMoney(
+      freelancerFund - roundedRefundToEmployer,
+    );
+    const systemFee = this.roundMoney(freelancerGross * SYSTEM_FEE_PERCENT);
+    const freelancerNet = this.roundMoney(freelancerGross - systemFee);
+    const allocatedTotal = this.roundMoney(
+      roundedRefundToEmployer +
+        freelancerNet +
+        roundedSupervisorFee +
+        systemFee,
+    );
+
+    if (allocatedTotal !== roundedTotalContractAmount) {
+      throw new BadRequestException(
+        'Tong phan bo tien tranh chap khong hop le',
+      );
+    }
+
+    return {
+      soTienHoan: roundedRefundToEmployer,
+      soTienFreelancer: freelancerNet,
+      soTienGiamSat: roundedSupervisorFee,
+      soTienHeThong: systemFee,
+    };
+  }
+
+  private roundMoney(value: number): number {
+    return Math.round(value * 100) / 100;
+  }
+
   private toDisputeDto(dispute: DisputeEntity): DisputeDto {
     return {
       tranhChapId: dispute.TranhChapID,
@@ -285,8 +458,8 @@ export class DisputesService {
             soTienHoan: dispute.KetLuanTranhChap.SoTienHoan.toString(),
             soTienFreelancer:
               dispute.KetLuanTranhChap.SoTienFreelancer.toString(),
-            soTienGiamSat:
-              dispute.KetLuanTranhChap.SoTienGiamSat.toString(),
+            soTienGiamSat: dispute.KetLuanTranhChap.SoTienGiamSat.toString(),
+            soTienHeThong: dispute.KetLuanTranhChap.SoTienHeThong.toString(),
             benChiuPhi: dispute.KetLuanTranhChap.BenChiuPhi,
             ngayKetLuan: dispute.KetLuanTranhChap.NgayKetLuan.toISOString(),
           }

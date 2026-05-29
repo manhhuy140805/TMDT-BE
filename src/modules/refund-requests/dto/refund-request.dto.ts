@@ -24,10 +24,27 @@ export type CreateRefundRequestDto = {
   nguoiThueId: number;
   lyDo: string;
   moTa?: string;
+  requestedRefundAmount?: number | string;
+  tienHoan?: number | string;
+  tienHoanYeuCau?: number | string;
+  soTienYeuCau?: number | string;
+  soTienHoanYeuCau?: number | string;
+  yeuCauHoanTien?: number | string;
+  soTienHoan?: number | string;
+  refundAmount?: number | string;
+  amount?: number | string;
 };
 
 export type DecideRefundRequestDto = {
   freelancerId: number;
+  requestedRefundAmount?: number | string;
+  tienHoanYeuCau?: number | string;
+  soTienYeuCau?: number | string;
+  soTienHoanYeuCau?: number | string;
+  yeuCauHoanTien?: number | string;
+  soTienHoan?: number | string;
+  refundAmount?: number | string;
+  amount?: number | string;
 };
 
 export type RefundRequestResponseDto = {

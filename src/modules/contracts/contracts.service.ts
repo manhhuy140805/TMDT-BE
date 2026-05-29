@@ -62,6 +62,16 @@ const CONTRACT_SELECT = {
       },
     },
   },
+  ThanhToans: {
+    where: {
+      LoaiTT: 'HoanTien',
+      TrangThai: 'ThanhCong',
+    },
+    select: {
+      ThanhToanID: true,
+    },
+    take: 1,
+  },
 } as const;
 
 type ContractEntity = Prisma.CongViecGetPayload<{
@@ -151,7 +161,10 @@ export class ContractsService {
 
       this.ensureValidTrangThai(payload.trangThai);
 
-      if (payload.trangThai !== 'HoanThanh' && payload.trangThai !== 'DaHuy') {
+      if (
+        payload.trangThai !== 'HoanThanh' &&
+        payload.trangThai !== 'DaHuy'
+      ) {
         const dispute = await this.prisma.tranhChap.findFirst({
           where: { CongViecID: id },
           select: { TranhChapID: true },
@@ -248,6 +261,8 @@ export class ContractsService {
   private toContractWithDetailsDto(
     contract: ContractEntity,
   ): ContractWithDetailsDto {
+    const trangThai = this.getDisplayStatus(contract);
+
     // Nếu chưa assign giám sát, cho phép update status
     if (!contract.GiamSat) {
       return {
@@ -257,7 +272,7 @@ export class ContractsService {
         nguoiThueId: contract.NguoiThueID,
         giaThoa: contract.GiaThoa.toString(),
         thoiGianThoa: contract.ThoiGianThoa,
-        trangThai: contract.TrangThai,
+        trangThai,
         ngayBatDau: contract.NgayBatDau
           ? contract.NgayBatDau.toISOString()
           : null,
@@ -300,7 +315,7 @@ export class ContractsService {
       nguoiThueId: contract.NguoiThueID,
       giaThoa: contract.GiaThoa.toString(),
       thoiGianThoa: contract.ThoiGianThoa,
-      trangThai: contract.TrangThai,
+      trangThai,
       ngayBatDau: contract.NgayBatDau
         ? contract.NgayBatDau.toISOString()
         : null,
@@ -343,5 +358,11 @@ export class ContractsService {
     ) {
       throw new BadRequestException('TrangThai khong hop le');
     }
+  }
+
+  private getDisplayStatus(
+    contract: ContractEntity,
+  ): ContractWithDetailsDto['trangThai'] {
+    return contract.ThanhToans.length > 0 ? 'DaHoanTien' : contract.TrangThai;
   }
 }

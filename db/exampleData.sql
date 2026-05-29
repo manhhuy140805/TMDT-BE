@@ -256,9 +256,9 @@ VALUES
 	(3, 15, 13, 1, 21, 9500000.00, 18, 'DangThucHien', '2026-05-14 09:00:00', NULL, 'DangGiamSat', 450000.00, false, false, false, true, '2026-05-14 08:30:00'),
 	(4, 20, 3, 1, 21, 38000000.00, 55, 'DaHuy', NULL, NULL, 'HoanThanh', 450000.00, false, false, false, false, '2026-05-15 08:30:00'),
 	(5, 2, 13, 2, 21, 30000000.00, 30, 'DangThucHien', '2026-05-03 09:00:00', NULL, 'DangGiamSat', 450000.00, false, false, false, true, '2026-05-03 08:30:00'),
-	-- Da ban giao 100%, chua mo tranh chap: nguoi thue 1 co the test gui khieu nai ket qua.
+	-- Da co tranh chap MoiMo: don vi giam sat 21 co the test tiep nhan xu ly.
 	(6, 32, 13, 1, 21, 12000000.00, 20, 'HoanThanh', '2026-05-04 09:00:00', '2026-05-24 17:00:00', 'HoanThanh', 450000.00, true, true, true, true, '2026-05-04 08:30:00'),
-	-- Da co tranh chap DangXuLy: don vi giam sat 21 co the test dua ra ket luan.
+	-- Da co tranh chap da ket luan hoan tien: dung de FE hien thi breakdown sau phan xu.
 	(7, 33, 13, 1, 21, 16000000.00, 24, 'HoanThanh', '2026-05-01 09:00:00', '2026-05-22 17:00:00', 'HoanThanh', 450000.00, true, true, true, true, '2026-05-01 08:30:00')
 ON CONFLICT ("CongViecID") DO NOTHING;
 
@@ -462,9 +462,6 @@ INSERT INTO "ThanhToan"
 VALUES
 	(1, 1, 1, 32450000.00, 'DatCoc', 'Vi', 'ThanhCong', 'Escrow cho cong viec API dang thuc hien.', '2026-05-02 08:35:00'),
 	(2, 2, 1, 36450000.00, 'DatCoc', 'ChuyenKhoan', 'ThanhCong', 'Escrow du an backend e-commerce.', '2026-04-09 08:35:00'),
-	(3, 2, 1, 34200000.00, 'ThanhToanCuoi', 'Vi', 'ThanhCong', 'Chi tra cho freelancer 13 sau khi hoan thanh.', '2026-05-08 17:10:00'),
-	(4, 2, 1, 1800000.00, 'PhiHeThong', 'ThanhToanQuaMang', 'ThanhCong', 'Phi nen tang 5 phan tram.', '2026-05-08 17:11:00'),
-	(5, 2, 1, 450000.00, 'PhiGiamSat', 'TienMat', 'ThanhCong', 'Phi giam sat cho tai khoan 21.', '2026-05-08 17:12:00'),
 	(6, 3, 1, 9950000.00, 'DatCoc', 'Vi', 'ThanhCong', 'Escrow dang duoc giu trong khi cho xac nhan ban giao 100 phan tram.', '2026-05-14 08:35:00'),
 	(8, 4, 1, 38450000.00, 'DatCoc', 'ThanhToanQuaMang', 'ThatBai', 'Giao dich khong thanh cong truoc khi huy cong viec.', '2026-05-15 08:35:00'),
 	(9, 5, 2, 30450000.00, 'DatCoc', 'Vi', 'ChoXuLy', 'Cho nguoi thue xac nhan nap escrow.', '2026-05-03 08:35:00'),
@@ -472,10 +469,11 @@ VALUES
 	(11, 6, 1, 11400000.00, 'ThanhToanCuoi', 'Vi', 'ThanhCong', 'Giai ngan cho freelancer sau khi ban giao ket qua 100%.', '2026-05-24 17:10:00'),
 	(12, 6, 1, 600000.00, 'PhiHeThong', 'Vi', 'ThanhCong', 'Phi he thong 5 phan tram cho cong viec 6.', '2026-05-24 17:11:00'),
 	(13, 6, 1, 450000.00, 'PhiGiamSat', 'Vi', 'ThanhCong', 'Phi giam sat cho cong viec 6.', '2026-05-24 17:12:00'),
-	(14, 7, 1, 16450000.00, 'DatCoc', 'Vi', 'ThanhCong', 'Escrow cho du an dashboard doanh thu.', '2026-05-01 08:35:00'),
-	(15, 7, 1, 15200000.00, 'ThanhToanCuoi', 'Vi', 'ThanhCong', 'Giai ngan cho freelancer truoc khi phat sinh khieu nai ket qua.', '2026-05-22 17:10:00'),
-	(16, 7, 1, 800000.00, 'PhiHeThong', 'Vi', 'ThanhCong', 'Phi he thong 5 phan tram cho cong viec 7.', '2026-05-22 17:11:00'),
-	(17, 7, 1, 450000.00, 'PhiGiamSat', 'Vi', 'ThanhCong', 'Phi giam sat cho cong viec 7.', '2026-05-22 17:12:00')
+	(14, 7, 1, 16450000.00, 'DatCoc', 'Vi', 'DaHoan', 'Escrow da duoc phan bo theo ket luan tranh chap #3.', '2026-05-01 08:35:00'),
+	(15, 7, 1, 5000000.00, 'HoanTien', 'Vi', 'ThanhCong', 'Hoan tien cho nguoi thue theo ket luan tranh chap #3.', '2026-05-25 10:10:00'),
+	(16, 7, 1, 10022500.00, 'ThanhToanCuoi', 'Vi', 'ThanhCong', 'Freelancer nhan phan con lai sau khi tru phi he thong theo tranh chap #3.', '2026-05-25 10:11:00'),
+	(17, 7, 1, 450000.00, 'PhiGiamSat', 'Vi', 'ThanhCong', 'Don vi giam sat nhan 100 phan tram phi giam sat theo tranh chap #3.', '2026-05-25 10:12:00'),
+	(18, 7, 1, 527500.00, 'PhiHeThong', 'Vi', 'ThanhCong', 'Phi he thong 5 phan tram tren phan freelancer gross theo tranh chap #3.', '2026-05-25 10:13:00')
 ON CONFLICT ("ThanhToanID") DO NOTHING;
 
 -- ============================================================
@@ -485,15 +483,33 @@ INSERT INTO "TranhChap"
 	("TranhChapID", "CongViecID", "NguoiGuiID", "GiamSatID", "LyDo", "MoTa", "TrangThai", "YeuCauHoanTien", "NgayMo", "NgayDong")
 VALUES
 	(2, 2, 1, 21, 'Ket qua API thieu bao cao da cam ket', 'Du an da hoan thanh nhung cac endpoint bao cao quan trong chua dung dac ta.', 'DangXuLy', 3000000.00, '2026-05-19 08:00:00', NULL),
-	(3, 7, 1, 21, 'Dashboard xuat sai tong doanh thu', 'Nguoi thue khong hai long vi bao cao Excel va so lieu tong hop khong khop voi tieu chi nghiem thu.', 'DangXuLy', 5000000.00, '2026-05-23 08:00:00', NULL)
+	(3, 7, 1, 21, 'Dashboard xuat sai tong doanh thu', 'Nguoi thue khong hai long vi bao cao Excel va so lieu tong hop khong khop voi tieu chi nghiem thu.', 'DaKetLuan', 5000000.00, '2026-05-23 08:00:00', '2026-05-25 10:00:00'),
+	(4, 6, 1, 21, 'Ket qua kiem thu cong thanh toan chua day du', 'Nguoi thue can don vi giam sat xem lai bao cao test case va cac bang chung nghiem thu.', 'MoiMo', 2000000.00, '2026-05-26 08:00:00', NULL)
 ON CONFLICT ("TranhChapID") DO NOTHING;
+
+-- Ket luan tranh chap #3 theo nghiep vu moi:
+-- totalContractAmount = 16,000,000; supervisorFee = 450,000; refundToEmployer = 5,000,000
+-- freelancerGross = 10,550,000; systemFee = 527,500; freelancerNet = 10,022,500.
+INSERT INTO "KetLuanTranhChap"
+	("KetLuanID", "TranhChapID", "GiamSatID", "KetQua", "LyDo", "SoTienHoan", "SoTienFreelancer", "SoTienGiamSat", "SoTienHeThong", "BenChiuPhi", "NgayKetLuan")
+VALUES
+	(1, 3, 21, 'HoanTienNguoiThue', 'Dashboard co sai lech so lieu xuat bao cao; hoan mot phan cho nguoi thue, giam sat nhan du phi, freelancer nhan phan con lai sau phi he thong.', 5000000.00, 10022500.00, 450000.00, 527500.00, 'ChiaSe', '2026-05-25 10:00:00')
+ON CONFLICT ("KetLuanID") DO NOTHING;
+
+UPDATE "CongViec"
+SET
+	"TrangThai" = 'DaHuy',
+	"TrangThaiGiamSat" = 'HoanThanh',
+	"NgayKetThuc" = '2026-05-25 10:00:00'
+WHERE "CongViecID" = 7;
 
 INSERT INTO "BangChungTranhChap"
 	("BangChungID", "TranhChapID", "NguoiNopID", "LoaiBangChung", "NoiDung", "DuongDanFile", "NgayNop")
 VALUES
 	(5, 2, 1, 'KhacP', 'Danh sach endpoint bao cao chua dung dac ta.', 'uploads/evidence/report-api-checklist.xlsx', '2026-05-20 09:00:00'),
 	(6, 3, 1, 'File', 'File Excel xuat tu dashboard cho thay so lieu tong doanh thu khong khop.', 'uploads/evidence/revenue-export-mismatch.xlsx', '2026-05-23 09:00:00'),
-	(7, 3, 13, 'TinNhan', 'Freelancer gui giai trinh ve cach tinh doanh thu trong dashboard.', NULL, '2026-05-24 09:00:00')
+	(7, 3, 13, 'TinNhan', 'Freelancer gui giai trinh ve cach tinh doanh thu trong dashboard.', NULL, '2026-05-24 09:00:00'),
+	(8, 4, 1, 'File', 'Nguoi thue nop bang chung cac test case thanh toan chua duoc bao phu.', 'uploads/evidence/payment-test-missing-cases.xlsx', '2026-05-26 09:00:00')
 ON CONFLICT ("BangChungID") DO NOTHING;
 
 -- ============================================================
@@ -550,7 +566,8 @@ VALUES
 	(7, 1, 'Thanh toan escrow', 'Khoan dat coc da duoc giu an toan.', 'ThanhToan', true, '2026-05-02 08:36:00'),
 	(8, 13, 'Danh gia moi', 'Nguoi thue 1 da danh gia cong viec hoan thanh.', 'DanhGia', false, '2026-05-09 09:01:00'),
 	(9, 1, 'Ban giao san sang danh gia', 'Cong viec kiem thu cong thanh toan da ban giao 100 phan tram de nghiem thu.', 'CongViec', false, '2026-05-24 17:01:00'),
-	(10, 21, 'Tranh chap dashboard dang xu ly', 'Tranh chap cong viec 7 dang cho don vi giam sat dua ra ket luan.', 'TranhChap', false, '2026-05-23 08:01:00')
+	(10, 21, 'Tranh chap dashboard da ket luan', 'Tranh chap cong viec 7 da ket luan hoan tien mot phan va phan bo escrow theo breakdown moi.', 'TranhChap', false, '2026-05-25 10:01:00'),
+	(11, 21, 'Tranh chap moi can tiep nhan', 'Tranh chap cong viec 6 dang o trang thai MoiMo de don vi giam sat bat dau xu ly.', 'TranhChap', false, '2026-05-26 08:01:00')
 ON CONFLICT ("ThongBaoID") DO NOTHING;
 
 -- ============================================================
