@@ -33,6 +33,18 @@ const REFUND_REQUEST_SELECT = {
   TranhChapID: true,
   NgayTao: true,
   NgayPhanHoi: true,
+  BangChungHoanTien: {
+    select: {
+      BangChungID: true,
+      YeuCauHoanTienID: true,
+      NguoiNopID: true,
+      LoaiBangChung: true,
+      NoiDung: true,
+      DuongDanFile: true,
+      LoaiNguoiNop: true,
+      NgayNop: true,
+    },
+  },
 } as const;
 
 type RefundRequestEntity = Prisma.YeuCauHoanTienGetPayload<{
@@ -76,6 +88,22 @@ export class RefundRequestsService {
   async create(
     payload: CreateRefundRequestDto,
   ): Promise<RefundRequestMutationResponseDto> {
+    // Validate minh chứng bắt buộc
+    if (!payload.bangChungArray || payload.bangChungArray.length === 0) {
+      throw new BadRequestException(
+        'Phai cung cap it nhat 1 minh chung khi yeu cau hoan tien',
+      );
+    }
+
+    // Validate từng minh chứng
+    for (const bc of payload.bangChungArray) {
+      if (!bc.noiDung && !bc.duongDanFile) {
+        throw new BadRequestException(
+          'Moi minh chung phai co noiDung hoac duongDanFile',
+        );
+      }
+    }
+
     const contract = await this.prisma.congViec.findUnique({
       where: { CongViecID: payload.congViecId },
     });
@@ -160,6 +188,18 @@ export class RefundRequestsService {
         select: REFUND_REQUEST_SELECT,
       });
 
+      // Tạo minh chứng từ Người thuê
+      await tx.bangChungHoanTien.createMany({
+        data: payload.bangChungArray!.map((bc) => ({
+          YeuCauHoanTienID: created.YeuCauHoanTienID,
+          NguoiNopID: payload.nguoiThueId,
+          LoaiBangChung: bc.loaiBangChung,
+          NoiDung: bc.noiDung || null,
+          DuongDanFile: bc.duongDanFile || null,
+          LoaiNguoiNop: 'NguoiThue',
+        })),
+      });
+
       await tx.thongBao.create({
         data: {
           TaiKhoanID: contract.FreelancerID,
@@ -169,7 +209,11 @@ export class RefundRequestsService {
         },
       });
 
-      return created;
+      // Lấy lại với minh chứng
+      return tx.yeuCauHoanTien.findUniqueOrThrow({
+        where: { YeuCauHoanTienID: created.YeuCauHoanTienID },
+        select: REFUND_REQUEST_SELECT,
+      });
     });
 
     return {
@@ -369,6 +413,22 @@ export class RefundRequestsService {
     id: number,
     payload: DecideRefundRequestDto,
   ): Promise<RefundRequestMutationResponseDto> {
+    // Validate minh chứng bắt buộc từ Freelancer
+    if (!payload.bangChungArray || payload.bangChungArray.length === 0) {
+      throw new BadRequestException(
+        'Freelancer phai cung cap it nhat 1 minh chung khi tu choi hoan tien',
+      );
+    }
+
+    // Validate từng minh chứng
+    for (const bc of payload.bangChungArray) {
+      if (!bc.noiDung && !bc.duongDanFile) {
+        throw new BadRequestException(
+          'Moi minh chung phai co noiDung hoac duongDanFile',
+        );
+      }
+    }
+
     const refundRequest = await this.findEntityOrThrow(id);
     this.validateFreelancerDecision(refundRequest, payload);
 
@@ -424,6 +484,18 @@ export class RefundRequestsService {
           YeuCauHoanTien: requestedRefundAmount,
           TrangThai: 'MoiMo',
         },
+      });
+
+      // Tạo minh chứng từ Freelancer
+      await tx.bangChungHoanTien.createMany({
+        data: payload.bangChungArray!.map((bc) => ({
+          YeuCauHoanTienID: id,
+          NguoiNopID: payload.freelancerId,
+          LoaiBangChung: bc.loaiBangChung,
+          NoiDung: bc.noiDung || null,
+          DuongDanFile: bc.duongDanFile || null,
+          LoaiNguoiNop: 'Freelancer',
+        })),
       });
 
       await tx.thongBao.createMany({
@@ -573,6 +645,16 @@ export class RefundRequestsService {
       ngayPhanHoi: request.NgayPhanHoi
         ? request.NgayPhanHoi.toISOString()
         : null,
+      bangChungs: request.BangChungHoanTien?.map((bc) => ({
+        bangChungId: bc.BangChungID,
+        yeuCauHoanTienId: bc.YeuCauHoanTienID,
+        nguoiNopId: bc.NguoiNopID,
+        loaiBangChung: bc.LoaiBangChung,
+        noiDung: bc.NoiDung,
+        duongDanFile: bc.DuongDanFile,
+        loaiNguoiNop: bc.LoaiNguoiNop,
+        ngayNop: bc.NgayNop.toISOString(),
+      })),
     };
   }
 }

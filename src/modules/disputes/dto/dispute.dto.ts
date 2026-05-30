@@ -1,8 +1,36 @@
 import type {
   BenChiuPhiKetLuan,
   KetQuaTranhChap,
+  LoaiBangChung,
   TrangThaiTranhChap,
 } from '@prisma/client';
+
+export type BangChungHoanTienDto = {
+  bangChungId: number;
+  yeuCauHoanTienId: number;
+  nguoiNopId: number;
+  loaiBangChung: LoaiBangChung;
+  noiDung: string | null;
+  duongDanFile: string | null;
+  loaiNguoiNop: string; // "NguoiThue" | "Freelancer"
+  ngayNop: string;
+};
+
+export type BangChungKetLuanDto = {
+  bangChungId: number;
+  ketLuanId: number;
+  nguoiNopId: number;
+  loaiBangChung: LoaiBangChung;
+  noiDung: string | null;
+  duongDanFile: string | null;
+  ngayNop: string;
+};
+
+export type BangChungCreateDto = {
+  loaiBangChung: LoaiBangChung;
+  noiDung?: string;
+  duongDanFile?: string;
+};
 
 export type DisputeDto = {
   tranhChapId: number;
@@ -15,6 +43,7 @@ export type DisputeDto = {
   yeuCauHoanTien: string;
   ngayMo: string;
   ngayDong: string | null;
+  bangChungs?: BangChungHoanTienDto[]; // Minh chứng từ Người thuê & Freelancer
   ketLuan: DisputeConclusionDto | null;
 };
 
@@ -29,6 +58,7 @@ export type DisputeConclusionDto = {
   soTienHeThong: string;
   benChiuPhi: BenChiuPhiKetLuan;
   ngayKetLuan: string;
+  bangChungs?: BangChungKetLuanDto[];
 };
 
 export type DisputeListResponseDto = {
@@ -61,6 +91,7 @@ export type ResolveDisputeDto = {
   soTienGiamSat?: number;
   soTienHeThong?: number;
   benChiuPhi: BenChiuPhiKetLuan;
+  bangChungArray?: BangChungCreateDto[]; // Tùy chọn (không bắt buộc)
 };
 
 export type DisputeMutationResponseDto = {

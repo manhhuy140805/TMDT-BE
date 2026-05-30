@@ -28,6 +28,23 @@ const DISPUTE_SELECT = {
   YeuCauHoanTien: true,
   NgayMo: true,
   NgayDong: true,
+  YeuCauHoanTienNguon: {
+    select: {
+      YeuCauHoanTienID: true,
+      BangChungHoanTien: {
+        select: {
+          BangChungID: true,
+          YeuCauHoanTienID: true,
+          NguoiNopID: true,
+          LoaiBangChung: true,
+          NoiDung: true,
+          DuongDanFile: true,
+          LoaiNguoiNop: true,
+          NgayNop: true,
+        },
+      },
+    },
+  },
   KetLuanTranhChap: {
     select: {
       KetLuanID: true,
@@ -40,6 +57,17 @@ const DISPUTE_SELECT = {
       SoTienHeThong: true,
       BenChiuPhi: true,
       NgayKetLuan: true,
+      BangChungKetLuan: {
+        select: {
+          BangChungID: true,
+          KetLuanID: true,
+          NguoiNopID: true,
+          LoaiBangChung: true,
+          NoiDung: true,
+          DuongDanFile: true,
+          NgayNop: true,
+        },
+      },
     },
   },
 } as const;
@@ -192,6 +220,17 @@ export class DisputesService {
     id: number,
     payload: ResolveDisputeDto,
   ): Promise<DisputeMutationResponseDto> {
+    // Validate từng minh chứng (nếu có)
+    if (payload.bangChungArray && payload.bangChungArray.length > 0) {
+      for (const bc of payload.bangChungArray) {
+        if (!bc.noiDung && !bc.duongDanFile) {
+          throw new BadRequestException(
+            'Moi minh chung phai co noiDung hoac duongDanFile',
+          );
+        }
+      }
+    }
+
     const dispute = await this.prisma.tranhChap.findUnique({
       where: { TranhChapID: id },
     });
@@ -286,6 +325,25 @@ export class DisputesService {
           BenChiuPhi: payload.benChiuPhi ?? 'ChiaSe',
         },
       });
+
+      // Lấy KetLuanID vừa tạo
+      const ketLuan = await tx.ketLuanTranhChap.findFirstOrThrow({
+        where: { TranhChapID: id },
+        orderBy: { NgayKetLuan: 'desc' },
+      });
+
+      // Tạo minh chứng từ Giám sát (nếu có)
+      if (payload.bangChungArray && payload.bangChungArray.length > 0) {
+        await tx.bangChungKetLuan.createMany({
+          data: payload.bangChungArray.map((bc) => ({
+            KetLuanID: ketLuan.KetLuanID,
+            NguoiNopID: payload.giamSatId,
+            LoaiBangChung: bc.loaiBangChung,
+            NoiDung: bc.noiDung || null,
+            DuongDanFile: bc.duongDanFile || null,
+          })),
+        });
+      }
 
       const resolvedDispute = await tx.tranhChap.update({
         where: { TranhChapID: id },
@@ -449,6 +507,18 @@ export class DisputesService {
       yeuCauHoanTien: dispute.YeuCauHoanTien.toString(),
       ngayMo: dispute.NgayMo.toISOString(),
       ngayDong: dispute.NgayDong ? dispute.NgayDong.toISOString() : null,
+      bangChungs: dispute.YeuCauHoanTienNguon?.BangChungHoanTien?.map(
+        (bc) => ({
+          bangChungId: bc.BangChungID,
+          yeuCauHoanTienId: bc.YeuCauHoanTienID,
+          nguoiNopId: bc.NguoiNopID,
+          loaiBangChung: bc.LoaiBangChung,
+          noiDung: bc.NoiDung,
+          duongDanFile: bc.DuongDanFile,
+          loaiNguoiNop: bc.LoaiNguoiNop,
+          ngayNop: bc.NgayNop.toISOString(),
+        }),
+      ),
       ketLuan: dispute.KetLuanTranhChap
         ? {
             ketLuanId: dispute.KetLuanTranhChap.KetLuanID,
@@ -462,6 +532,17 @@ export class DisputesService {
             soTienHeThong: dispute.KetLuanTranhChap.SoTienHeThong.toString(),
             benChiuPhi: dispute.KetLuanTranhChap.BenChiuPhi,
             ngayKetLuan: dispute.KetLuanTranhChap.NgayKetLuan.toISOString(),
+            bangChungs: dispute.KetLuanTranhChap.BangChungKetLuan?.map(
+              (bc) => ({
+                bangChungId: bc.BangChungID,
+                ketLuanId: bc.KetLuanID,
+                nguoiNopId: bc.NguoiNopID,
+                loaiBangChung: bc.LoaiBangChung,
+                noiDung: bc.NoiDung,
+                duongDanFile: bc.DuongDanFile,
+                ngayNop: bc.NgayNop.toISOString(),
+              }),
+            ),
           }
         : null,
     };

@@ -5,6 +5,8 @@ BEGIN;
 
 -- Xoa du lieu tat ca bang truoc khi insert du lieu mau.
 TRUNCATE TABLE
+	"BangChungHoanTien",
+	"BangChungKetLuan",
 	"BangChungTranhChap",
 	"BaoCao",
 	"BaoGia",
@@ -582,6 +584,17 @@ VALUES
 	(4, 13, 21, 'Bao cao nham', 'Nguoi gui xac nhan gui nham noi dung.', 'HuyBo', 'Bao cao duoc huy theo yeu cau nguoi gui.', 6, '2026-05-21 10:00:00', '2026-05-21 12:00:00')
 ON CONFLICT ("BaoCaoID") DO NOTHING;
 
+-- ============================================================
+-- BANG CHUNG KET LUAN: Minh chung tu giam sat khi ket luan tranh chap
+-- ============================================================
+INSERT INTO "BangChungKetLuan"
+	("BangChungID", "KetLuanID", "NguoiNopID", "LoaiBangChung", "NoiDung", "DuongDanFile", "NgayNop")
+VALUES
+	(1, 1, 21, 'File', NULL, 'uploads/evidence/conclusion/dashboard-analysis-report.pdf', '2026-05-25 09:30:00'),
+	(2, 1, 21, 'GhiChu', 'Sau khi kiem tra chi tiet, dashboard co sai lech trong cong thuc tinh tong doanh thu. Freelancer da lam tot 80% cong viec nhung phan bao cao can sua lai. Quyet dinh hoan 5 trieu cho nguoi thue, freelancer nhan phan con lai sau phi he thong.', NULL, '2026-05-25 09:35:00'),
+	(3, 1, 21, 'HinhAnh', NULL, 'uploads/evidence/conclusion/revenue-calculation-screenshot.png', '2026-05-25 09:40:00')
+ON CONFLICT ("BangChungID") DO NOTHING;
+
 INSERT INTO "KhuyenMai"
 	("KhuyenMaiID", "MaCode", "LoaiGiam", "GiaTriGiam", "GiaTriToiDa", "SoLuotDung", "GioiHanLuot", "TrangThai", "NgayBatDau", "NgayKetThuc")
 VALUES
@@ -633,6 +646,8 @@ SELECT setval(pg_get_serial_sequence('"ThanhToan"', 'ThanhToanID'), COALESCE(MAX
 SELECT setval(pg_get_serial_sequence('"TranhChap"', 'TranhChapID'), COALESCE(MAX("TranhChapID"), 1), true) FROM "TranhChap";
 SELECT setval(pg_get_serial_sequence('"YeuCauHoanTien"', 'YeuCauHoanTienID'), COALESCE(MAX("YeuCauHoanTienID"), 1), true) FROM "YeuCauHoanTien";
 SELECT setval(pg_get_serial_sequence('"BangChungTranhChap"', 'BangChungID'), COALESCE(MAX("BangChungID"), 1), true) FROM "BangChungTranhChap";
+SELECT setval(pg_get_serial_sequence('"BangChungHoanTien"', 'BangChungID'), COALESCE(MAX("BangChungID"), 1), true) FROM "BangChungHoanTien";
+SELECT setval(pg_get_serial_sequence('"BangChungKetLuan"', 'BangChungID'), COALESCE(MAX("BangChungID"), 1), true) FROM "BangChungKetLuan";
 SELECT setval(pg_get_serial_sequence('"KetLuanTranhChap"', 'KetLuanID'), COALESCE(MAX("KetLuanID"), 1), true) FROM "KetLuanTranhChap";
 SELECT setval(pg_get_serial_sequence('"CuocHoiThoai"', 'CuocHoiThoaiID'), COALESCE(MAX("CuocHoiThoaiID"), 1), true) FROM "CuocHoiThoai";
 SELECT setval(pg_get_serial_sequence('"TinNhan"', 'TinNhanID'), COALESCE(MAX("TinNhanID"), 1), true) FROM "TinNhan";

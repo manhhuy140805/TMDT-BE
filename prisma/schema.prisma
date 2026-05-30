@@ -233,6 +233,8 @@ model TaiKhoan {
   BangChungs                BangChungTranhChap[]
   YeuCauHoanTiensNguoiThue  YeuCauHoanTien[]     @relation("HoanTienNguoiThue")
   YeuCauHoanTiensFreelancer YeuCauHoanTien[]     @relation("HoanTienFreelancer")
+  BangChungHoanTiens        BangChungHoanTien[]
+  BangChungKetLuans         BangChungKetLuan[]
   // Danh gia
   DanhGiasGui               DanhGia[]            @relation("DanhGiaNguoiGui")
   DanhGiasNhan              DanhGia[]            @relation("DanhGiaNguoiNhan")
@@ -497,10 +499,11 @@ model YeuCauHoanTien {
   NgayTao          DateTime                @default(now()) @db.Timestamp(3)
   NgayPhanHoi      DateTime?               @db.Timestamp(3)
 
-  CongViec   CongViec   @relation(fields: [CongViecID], references: [CongViecID])
-  NguoiThue  TaiKhoan   @relation("HoanTienNguoiThue", fields: [NguoiThueID], references: [TaiKhoanID])
-  Freelancer TaiKhoan   @relation("HoanTienFreelancer", fields: [FreelancerID], references: [TaiKhoanID])
-  TranhChap  TranhChap? @relation(fields: [TranhChapID], references: [TranhChapID])
+  CongViec          CongViec            @relation(fields: [CongViecID], references: [CongViecID])
+  NguoiThue         TaiKhoan            @relation("HoanTienNguoiThue", fields: [NguoiThueID], references: [TaiKhoanID])
+  Freelancer        TaiKhoan            @relation("HoanTienFreelancer", fields: [FreelancerID], references: [TaiKhoanID])
+  TranhChap         TranhChap?          @relation(fields: [TranhChapID], references: [TranhChapID])
+  BangChungHoanTien BangChungHoanTien[]
 
   @@index([CongViecID])
   @@index([NguoiThueID])
@@ -559,7 +562,41 @@ model KetLuanTranhChap {
   BenChiuPhi       BenChiuPhiKetLuan @default(ChiaSe)
   NgayKetLuan      DateTime          @default(now()) @db.Timestamp(3)
 
-  TranhChap TranhChap @relation(fields: [TranhChapID], references: [TranhChapID])
+  TranhChap        TranhChap          @relation(fields: [TranhChapID], references: [TranhChapID])
+  BangChungKetLuan BangChungKetLuan[]
+}
+
+model BangChungHoanTien {
+  BangChungID      Int              @id @default(autoincrement())
+  YeuCauHoanTienID Int
+  NguoiNopID       Int // TaiKhoanID
+  LoaiBangChung    LoaiBangChung    @default(GhiChu)
+  NoiDung          String?          @db.Text
+  DuongDanFile     String?          @db.VarChar(500)
+  LoaiNguoiNop     String           @db.VarChar(50) // "NguoiThue" | "Freelancer"
+  NgayNop          DateTime         @default(now()) @db.Timestamp(3)
+
+  YeuCauHoanTien YeuCauHoanTien @relation(fields: [YeuCauHoanTienID], references: [YeuCauHoanTienID], onDelete: Cascade)
+  NguoiNop       TaiKhoan       @relation(fields: [NguoiNopID], references: [TaiKhoanID])
+
+  @@index([YeuCauHoanTienID])
+  @@index([NguoiNopID])
+}
+
+model BangChungKetLuan {
+  BangChungID   Int           @id @default(autoincrement())
+  KetLuanID     Int
+  NguoiNopID    Int // TaiKhoanID (GiamSatID)
+  LoaiBangChung LoaiBangChung @default(GhiChu)
+  NoiDung       String?       @db.Text
+  DuongDanFile  String?       @db.VarChar(500)
+  NgayNop       DateTime      @default(now()) @db.Timestamp(3)
+
+  KetLuan  KetLuanTranhChap @relation(fields: [KetLuanID], references: [KetLuanID], onDelete: Cascade)
+  NguoiNop TaiKhoan         @relation(fields: [NguoiNopID], references: [TaiKhoanID])
+
+  @@index([KetLuanID])
+  @@index([NguoiNopID])
 }
 
 model CuocHoiThoai {

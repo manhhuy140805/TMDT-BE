@@ -1,4 +1,24 @@
-import type { TrangThaiYeuCauHoanTien } from '@prisma/client';
+import type { LoaiBangChung, TrangThaiYeuCauHoanTien } from '@prisma/client';
+
+export type BangChungDto = {
+  bangChungId: number;
+  loaiBangChung: LoaiBangChung;
+  noiDung: string | null;
+  duongDanFile: string | null;
+  nguoiNopId: number;
+  ngayNop: string;
+};
+
+export type BangChungHoanTienDto = BangChungDto & {
+  yeuCauHoanTienId: number;
+  loaiNguoiNop: string; // "NguoiThue" | "Freelancer"
+};
+
+export type BangChungCreateDto = {
+  loaiBangChung: LoaiBangChung;
+  noiDung?: string;
+  duongDanFile?: string;
+};
 
 export type RefundRequestDto = {
   refundRequestId: number;
@@ -17,6 +37,7 @@ export type RefundRequestDto = {
   tranhChapId: number | null;
   ngayTao: string;
   ngayPhanHoi: string | null;
+  bangChungs?: BangChungHoanTienDto[];
 };
 
 export type CreateRefundRequestDto = {
@@ -33,6 +54,7 @@ export type CreateRefundRequestDto = {
   soTienHoan?: number | string;
   refundAmount?: number | string;
   amount?: number | string;
+  bangChungArray?: BangChungCreateDto[];
 };
 
 export type DecideRefundRequestDto = {
@@ -45,6 +67,7 @@ export type DecideRefundRequestDto = {
   soTienHoan?: number | string;
   refundAmount?: number | string;
   amount?: number | string;
+  bangChungArray?: BangChungCreateDto[];
 };
 
 export type RefundRequestResponseDto = {

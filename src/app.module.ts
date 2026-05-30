@@ -20,6 +20,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { ReportsModule } from './modules/reports/reports.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { RefundRequestsModule } from './modules/refund-requests/refund-requests.module';
+import { UploadModule } from './modules/upload/upload.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { RefundRequestsModule } from './modules/refund-requests/refund-requests.
     NotificationsModule,
     ReportsModule,
     AdminModule,
+    UploadModule,
   ],
 })
 export class AppModule {}
