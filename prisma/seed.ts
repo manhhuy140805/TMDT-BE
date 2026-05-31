@@ -8,7 +8,7 @@ import {
   TrangThaiDonViGiamSat,
   TrangThaiTaiKhoan,
   VaiTroTaiKhoan,
-} from '../src/generated/prisma';
+} from '@prisma/client';
 
 const prisma = new PrismaClient();
 

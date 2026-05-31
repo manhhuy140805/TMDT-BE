@@ -41,6 +41,8 @@ export class ContractFlowService {
       throw new BadRequestException('Bao gia da duoc xu ly');
     }
 
+    await this.validateFreelancer(baoGia.TaiKhoanID);
+
     // Validate nguoi thue owns the job
     const nguoiThue = await this.prisma.taiKhoan.findUnique({
       where: { TaiKhoanID: payload.nguoiThueId },
@@ -267,6 +269,26 @@ export class ContractFlowService {
   }
 
   // --- Private helpers ---
+
+  private async validateFreelancer(taiKhoanId: number): Promise<void> {
+    const freelancer = await this.prisma.taiKhoan.findUnique({
+      where: { TaiKhoanID: taiKhoanId },
+      select: {
+        VaiTro: true,
+        Freelancer: {
+          select: { FreelancerID: true },
+        },
+      },
+    });
+
+    if (
+      !freelancer ||
+      freelancer.VaiTro !== 'Freelancer' ||
+      !freelancer.Freelancer
+    ) {
+      throw new BadRequestException('Bao gia khong thuoc freelancer hop le');
+    }
+  }
 
   private async validateConfirmRole(
     congViec: any,

@@ -257,10 +257,15 @@ export class ProposalsService {
   private async validateFreelancer(freelancerId: number): Promise<void> {
     const taiKhoan = await this.prisma.taiKhoan.findUnique({
       where: { TaiKhoanID: freelancerId },
-      select: { TaiKhoanID: true },
+      select: {
+        VaiTro: true,
+        Freelancer: {
+          select: { FreelancerID: true },
+        },
+      },
     });
 
-    if (!taiKhoan) {
+    if (!taiKhoan || taiKhoan.VaiTro !== 'Freelancer' || !taiKhoan.Freelancer) {
       throw new BadRequestException('Freelancer khong ton tai');
     }
   }

@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    command: sh -c "npx prisma db push && node dist/main"
     container_name: fras-backend
     restart: unless-stopped
     depends_on:
